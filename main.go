@@ -41,10 +41,10 @@ func main() {
 
 	// Swagger
 	mux.HandleFunc("GET /swagger/", httpSwagger.WrapHandler)
-	// mux.HandleFunc("GET /swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
-	// 	w.Header().Set("Content-Type", "application/json")
-	// 	http.ServeFile(w, r, "./docs/swagger.json")
-	// })
+	mux.HandleFunc("GET /swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		http.ServeFile(w, r, "./docs/swagger.json")
+	})
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }

@@ -18,8 +18,10 @@ func writeResponseBody(rw http.ResponseWriter, user models.UserData) {
 	response_user_byte, err := json.Marshal(response_user)
 	if err != nil {
 		log.Println(err)
-		http.Error(rw, fmt.Sprint("Can't convert user data to response json: %#v", response_user), 500)
+		http.Error(rw, "Can't convert user data to response json", 500)
 	}
+
+	rw.Header().Set("Content-Type", "application/json")
 	_, err = rw.Write(response_user_byte)
 	if err != nil {
 		log.Println(err)

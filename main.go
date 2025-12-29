@@ -7,6 +7,7 @@ import (
 	_ "movie_backend_go/docs"
 	"movie_backend_go/handlers"
 	"net/http"
+	"time"
 )
 
 var c = db.Config{
@@ -34,9 +35,24 @@ func main() {
 	}
 	defer db.Close()
 
+	ping_db_check := func() {
+		for {
+			err = db.Ping()
+			if err != nil {
+				log.Panic(err)
+			}
+			time.Sleep(time.Minute * 5)
+		}
+	}
+	go ping_db_check()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /user/{id}", handlers.GetUserHandlerMake(db))
 	mux.HandleFunc("POST /user", handlers.CreateUserHandler(db))
+
+	updateHandler := handlers.UpdateUserHandler(db)
+	mux.HandleFunc("PATCH /user/{id}", updateHandler)
+	mux.HandleFunc("PUT /user/{id}", updateHandler)
 	mux.HandleFunc("DELETE /user/{id}", handlers.DeleteUserHandler(db))
 
 	// Swagger

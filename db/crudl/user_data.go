@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"movie_backend_go/models"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -25,21 +26,33 @@ func CreateUserDataDB(db *sql.DB, userCreate models.CreateUserDataRequest) (mode
 }
 
 // Write correctly
-// func UpdateUserDataDB(db *sql.DB, userCreate models.UpdateUserDataRequest) (models.UserData, error) {
-// 	var createSchema = `
-// 		INSERT INTO user_data(id, name, login, password) VALUES
-// 		($1, $2, $3, $4)
-// 		RETURNING id, name, login, password, created_at
-// 		`
-// 	res := db.QueryRow(createSchema, uuid.NewString(), userCreate.Name, userCreate.Login, userCreate.Password)
-//
-// 	user := models.UserData{}
-// 	err := res.Scan(&user.ID, &user.Name, &user.Login, &user.Password, &user.CreatedAt)
-// 	if err != nil {
-// 		return models.UserData{}, fmt.Errorf("scanning created user: %w", err)
-// 	}
-// 	return user, nil
-// }
+func UpdateUserDataDB(db *sql.DB, userUpdate models.UpdateUserDataRequest, id string) (models.UserData, error) {
+	var updateScheme = ` UPDATE user_data SET `
+	updates := []string{}
+	if userUpdate.Login != nil {
+		updates = append(updates, fmt.Sprintf("login = %s", *userUpdate.Login))
+	}
+	if userUpdate.Name != nil {
+		updates = append(updates, fmt.Sprintf("name = %s", *userUpdate.Name))
+	}
+	if userUpdate.Login != nil {
+		updates = append(updates, fmt.Sprintf("password = %s", *userUpdate.Password))
+	}
+	updateString := strings.Join(updates, ", ")
+	updateScheme += updateString
+	updateScheme += fmt.Sprintf("\n WHERE id = '%s'", id)
+	updateScheme += fmt.Sprintf("\n RETURNING id, name, login, password, created_at")
+	fmt.Println(updateScheme)
+
+	res := db.QueryRow(updateScheme)
+
+	user := models.UserData{}
+	err := res.Scan(&user.ID, &user.Name, &user.Login, &user.Password, &user.CreatedAt)
+	if err != nil {
+		return models.UserData{}, fmt.Errorf("scanning created user: %w", err)
+	}
+	return user, nil
+}
 
 func GetUserDB(db *sql.DB, id string) (models.UserData, error) {
 	var getSchema = `

@@ -45,13 +45,6 @@ var schema = `
 	PRIMARY KEY (user_id, movie_id)
 	);
 
-
-	CREATE TABLE IF NOT EXISTS marked_movie(
-	user_id UUID REFERENCES user_data,
-	movie_id UUID REFERENCES movie,
-	PRIMARY KEY (user_id, movie_id)
-	);
-
 	`
 
 // WARN: need close() db in outer function
@@ -59,10 +52,6 @@ func InitDB(c Config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", c.configString())
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
-	}
-	err = db.Ping()
-	if err != nil {
-		return nil, fmt.Errorf("ping db: %w", err)
 	}
 
 	// TODO: parametrize parameters?

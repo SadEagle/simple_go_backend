@@ -1,4 +1,13 @@
 definitions:
+  models.CreateUserDataRequest:
+    properties:
+      login:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
   models.UserDataResponse:
     properties:
       created_at:
@@ -27,24 +36,12 @@ paths:
       - application/json
       description: Create user
       parameters:
-      - description: Name
+      - description: User creation data
         in: body
-        name: name
+        name: request
         required: true
         schema:
-          type: string
-      - description: Login
-        in: body
-        name: login
-        required: true
-        schema:
-          type: string
-      - description: Password
-        in: body
-        name: password
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/models.CreateUserDataRequest'
       produces:
       - application/json
       responses:
@@ -55,40 +52,25 @@ paths:
         "400":
           description: Bad Request
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
         "404":
           description: Not Found
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Create user
       tags:
       - user
   /user/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get user by id
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.UserDataResponse'
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Show user
-      tags:
-      - user
-  /user/id:
     delete:
       consumes:
       - application/json
@@ -109,7 +91,47 @@ paths:
         "404":
           description: Not Found
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - user
+    get:
+      consumes:
+      - application/json
+      description: Get user by id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserDataResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Show user
       tags:
       - user
 swagger: "2.0"

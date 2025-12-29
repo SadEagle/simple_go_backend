@@ -24,6 +24,23 @@ func CreateUserDataDB(db *sql.DB, userCreate models.CreateUserDataRequest) (mode
 	return user, nil
 }
 
+// Write correctly
+// func UpdateUserDataDB(db *sql.DB, userCreate models.UpdateUserDataRequest) (models.UserData, error) {
+// 	var createSchema = `
+// 		INSERT INTO user_data(id, name, login, password) VALUES
+// 		($1, $2, $3, $4)
+// 		RETURNING id, name, login, password, created_at
+// 		`
+// 	res := db.QueryRow(createSchema, uuid.NewString(), userCreate.Name, userCreate.Login, userCreate.Password)
+//
+// 	user := models.UserData{}
+// 	err := res.Scan(&user.ID, &user.Name, &user.Login, &user.Password, &user.CreatedAt)
+// 	if err != nil {
+// 		return models.UserData{}, fmt.Errorf("scanning created user: %w", err)
+// 	}
+// 	return user, nil
+// }
+
 func GetUserDB(db *sql.DB, id string) (models.UserData, error) {
 	var getSchema = `
 		SELECT id, name, login, password, created_at

@@ -36,7 +36,8 @@ func writeResponseBody(rw http.ResponseWriter, user models.UserData) {
 // @Produce      json
 // @Param        id   path      string  true  "User ID"
 // @Success      200  {object}  models.UserDataResponse
-// @Failure      404  {object}  string
+// @Failure      404  {object}	map[string]string
+// @Failure      500  {object}  map[string]string
 // @Router       /user/{id} [get]
 func GetUserHandlerMake(db *sql.DB) http.HandlerFunc {
 	GetUserHandler := func(rw http.ResponseWriter, r *http.Request) {
@@ -58,29 +59,25 @@ func GetUserHandlerMake(db *sql.DB) http.HandlerFunc {
 // @Tags         user
 // @Accept       json
 // @Produce      json
-// @Param        name 		body	string  true  "Name"
-// @Param        login 		body 	string  true  "Login"
-// @Param        password body  string  true  "Password"
+// @Param        request 		body	models.CreateUserDataRequest  true  "User creation data"
 // @Success      201  {object}  models.UserDataResponse
-// @Failure      400  {object}  string
-// @Failure      404  {object}  string
+// @Failure      400  {object}  map[string]string
+// @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
 // @Router       /user [post]
 func CreateUserHandler(db *sql.DB) http.HandlerFunc {
 	CreateUserHandler := func(rw http.ResponseWriter, r *http.Request) {
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
+		decoder := json.NewDecoder(r.Body)
+		decoder.DisallowUnknownFields() // Strict parsing
+
+		var createUserData models.CreateUserDataRequest
+		err := decoder.Decode(&createUserData)
+		if err != nil && err != io.EOF {
 			log.Println(err)
-			http.Error(rw, "Can't read body request", 400)
+			http.Error(rw, "Can't proceed body request", 400)
 			return
 		}
 
-		var createUserData models.CreateUserDataRequest
-		err = json.Unmarshal(body, &createUserData)
-		if err != nil {
-			log.Println(err)
-			http.Error(rw, "Can't proceed request body", 400)
-			return
-		}
 		user, err := crudl.CreateUserDataDB(db, createUserData)
 		if err != nil {
 			log.Println(err)
@@ -88,8 +85,8 @@ func CreateUserHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		writeResponseBody(rw, user)
 		rw.WriteHeader(201) // 204 - Created
+		writeResponseBody(rw, user)
 	}
 	return CreateUserHandler
 }
@@ -100,8 +97,9 @@ func CreateUserHandler(db *sql.DB) http.HandlerFunc {
 // @Produce      json
 // @Param        id   path      string  true  "User ID"
 // @Success      204  {object}  models.UserDataResponse
-// @Failure      404  {object}  string
-// @Router       /user/id [delete]
+// @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /user/{id} [delete]
 func DeleteUserHandler(db *sql.DB) http.HandlerFunc {
 	DeleteUserHandler := func(rw http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("id")

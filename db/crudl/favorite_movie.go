@@ -6,7 +6,7 @@ import (
 	"movie_backend_go/models"
 )
 
-func CreateFavoriteMovieDB(db *sql.DB, favoriteMovieCreate models.CreateFavoriteMovieRequest) (models.FavoriteMovie, error) {
+func AddFavoriteMovieDB(db *sql.DB, favoriteMovieCreate models.AddFavoriteMovieRequest) (models.FavoriteMovie, error) {
 	var createShema = `
 		INSERT INTO favorite_movie(user_id, movie_id)
 		VALUES ($1, $2)

@@ -1,6 +1,7 @@
 # About
 
-Current project is simple golang backend implementaion with only net/http
+Current project is simple golang backend implementaion with only net/http.
+It contain 3 tables movie, user, favorite_movie. We may add user, movie and favorite_movie relations.
 
 # How to test
 1. Run `docker compose up`

@@ -13,19 +13,21 @@ definitions:
       password:
         type: string
     type: object
-  models.FavoriteMovieListResponse:
-    properties:
-      movie_list:
-        items:
-          $ref: '#/definitions/models.FavoriteMovieResponse'
-        type: array
-    type: object
-  models.FavoriteMovieResponse:
+  models.FavoriteMovie:
     properties:
       movie_id:
         type: string
+      user_id:
+        type: string
     type: object
-  models.MovieResponse:
+  models.FavoriteMovieList:
+    properties:
+      favorite_movie_list:
+        items:
+          $ref: '#/definitions/models.FavoriteMovie'
+        type: array
+    type: object
+  models.Movie:
     properties:
       created_at:
         type: string
@@ -35,6 +37,13 @@ definitions:
         type: number
       title:
         type: string
+    type: object
+  models.MovieList:
+    properties:
+      movie_list:
+        items:
+          $ref: '#/definitions/models.Movie'
+        type: array
     type: object
   models.UpdateMovieRequest:
     properties:
@@ -50,16 +59,23 @@ definitions:
       password:
         type: string
     type: object
-  models.UserDataResponse:
+  models.UserData:
     properties:
       created_at:
-        type: string
-      id:
         type: string
       login:
         type: string
       name:
         type: string
+      user_data:
+        type: string
+    type: object
+  models.UserDataList:
+    properties:
+      user_list:
+        items:
+          $ref: '#/definitions/models.UserData'
+        type: array
     type: object
 externalDocs:
   description: OpenAPI
@@ -73,6 +89,32 @@ info:
   version: "1.0"
 paths:
   /movie:
+    get:
+      consumes:
+      - application/json
+      description: Get movie list
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieList'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Show movie list
+      tags:
+      - movie
     post:
       consumes:
       - application/json
@@ -90,7 +132,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.MovieResponse'
+            $ref: '#/definitions/models.Movie'
         "400":
           description: Bad Request
           schema:
@@ -129,7 +171,7 @@ paths:
         "204":
           description: No Content
           schema:
-            $ref: '#/definitions/models.MovieResponse'
+            $ref: '#/definitions/models.Movie'
         "404":
           description: Not Found
           schema:
@@ -160,7 +202,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.MovieResponse'
+            $ref: '#/definitions/models.Movie'
         "404":
           description: Not Found
           schema:
@@ -198,7 +240,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.MovieResponse'
+            $ref: '#/definitions/models.Movie'
         "400":
           description: Bad Request
           schema:
@@ -221,6 +263,32 @@ paths:
       tags:
       - movie
   /user:
+    get:
+      consumes:
+      - application/json
+      description: Get user list
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserDataList'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Show user list
+      tags:
+      - user
     post:
       consumes:
       - application/json
@@ -238,7 +306,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.UserDataResponse'
+            $ref: '#/definitions/models.UserData'
         "400":
           description: Bad Request
           schema:
@@ -277,7 +345,7 @@ paths:
         "204":
           description: No Content
           schema:
-            $ref: '#/definitions/models.UserDataResponse'
+            $ref: '#/definitions/models.UserData'
         "404":
           description: Not Found
           schema:
@@ -308,7 +376,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.UserDataResponse'
+            $ref: '#/definitions/models.UserData'
         "404":
           description: Not Found
           schema:
@@ -346,7 +414,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.UserDataResponse'
+            $ref: '#/definitions/models.UserData'
         "400":
           description: Bad Request
           schema:
@@ -385,7 +453,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.FavoriteMovieListResponse'
+            $ref: '#/definitions/models.FavoriteMovieList'
         "404":
           description: Not Found
           schema:
@@ -422,7 +490,7 @@ paths:
         "204":
           description: No Content
           schema:
-            $ref: '#/definitions/models.FavoriteMovieResponse'
+            $ref: '#/definitions/models.FavoriteMovie'
         "404":
           description: Not Found
           schema:
@@ -458,7 +526,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.FavoriteMovieResponse'
+            $ref: '#/definitions/models.FavoriteMovie'
         "404":
           description: Not Found
           schema:

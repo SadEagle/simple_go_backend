@@ -1,0 +1,41 @@
+services:
+  backend:
+    build: .
+    networks:
+      - dev-db-network
+    ports:
+      - 8080:8080
+    depends_on:
+      dev-db:
+        condition: service_healthy
+
+  dev-db:
+    image: docker.io/library/postgres:17.6-alpine3.22
+    restart: always
+    shm_size: 128mb
+    env_file:
+      - ./.env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DEV_DB}
+      - POSTGRES_USER=${POSTGRES_DEV_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_DEV_PASSWORD}
+    volumes:
+      - dev-db-volume:/var/lib/postgresql/data
+    networks:
+      - dev-db-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_DEV_USER} -d ${POSTGRES_DEV_DB}",
+        ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+networks:
+  dev-db-network:
+
+volumes:
+  dev-db-volume:

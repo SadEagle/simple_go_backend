@@ -17,6 +17,45 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/movie": {
+            "get": {
+                "description": "Get movie list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movie"
+                ],
+                "summary": "Show movie list",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieList"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create movie",
                 "consumes": [
@@ -44,7 +83,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.MovieResponse"
+                            "$ref": "#/definitions/models.Movie"
                         }
                     },
                     "400": {
@@ -103,7 +142,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.MovieResponse"
+                            "$ref": "#/definitions/models.Movie"
                         }
                     },
                     "404": {
@@ -150,7 +189,7 @@ const docTemplate = `{
                     "204": {
                         "description": "No Content",
                         "schema": {
-                            "$ref": "#/definitions/models.MovieResponse"
+                            "$ref": "#/definitions/models.Movie"
                         }
                     },
                     "404": {
@@ -207,7 +246,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.MovieResponse"
+                            "$ref": "#/definitions/models.Movie"
                         }
                     },
                     "400": {
@@ -241,6 +280,45 @@ const docTemplate = `{
             }
         },
         "/user": {
+            "get": {
+                "description": "Get user list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Show user list",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserDataList"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Create user",
                 "consumes": [
@@ -268,7 +346,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.UserDataResponse"
+                            "$ref": "#/definitions/models.UserData"
                         }
                     },
                     "400": {
@@ -327,7 +405,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.UserDataResponse"
+                            "$ref": "#/definitions/models.UserData"
                         }
                     },
                     "404": {
@@ -374,7 +452,7 @@ const docTemplate = `{
                     "204": {
                         "description": "No Content",
                         "schema": {
-                            "$ref": "#/definitions/models.UserDataResponse"
+                            "$ref": "#/definitions/models.UserData"
                         }
                     },
                     "404": {
@@ -431,7 +509,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.UserDataResponse"
+                            "$ref": "#/definitions/models.UserData"
                         }
                     },
                     "400": {
@@ -489,7 +567,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.FavoriteMovieListResponse"
+                            "$ref": "#/definitions/models.FavoriteMovieList"
                         }
                     },
                     "404": {
@@ -545,7 +623,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.FavoriteMovieResponse"
+                            "$ref": "#/definitions/models.FavoriteMovie"
                         }
                     },
                     "404": {
@@ -599,7 +677,7 @@ const docTemplate = `{
                     "204": {
                         "description": "No Content",
                         "schema": {
-                            "$ref": "#/definitions/models.FavoriteMovieResponse"
+                            "$ref": "#/definitions/models.FavoriteMovie"
                         }
                     },
                     "404": {
@@ -647,26 +725,29 @@ const docTemplate = `{
                 }
             }
         },
-        "models.FavoriteMovieListResponse": {
-            "type": "object",
-            "properties": {
-                "movie_list": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.FavoriteMovieResponse"
-                    }
-                }
-            }
-        },
-        "models.FavoriteMovieResponse": {
+        "models.FavoriteMovie": {
             "type": "object",
             "properties": {
                 "movie_id": {
                     "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
-        "models.MovieResponse": {
+        "models.FavoriteMovieList": {
+            "type": "object",
+            "properties": {
+                "favorite_movie_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.FavoriteMovie"
+                    }
+                }
+            }
+        },
+        "models.Movie": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -680,6 +761,17 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "models.MovieList": {
+            "type": "object",
+            "properties": {
+                "movie_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Movie"
+                    }
                 }
             }
         },
@@ -705,13 +797,10 @@ const docTemplate = `{
                 }
             }
         },
-        "models.UserDataResponse": {
+        "models.UserData": {
             "type": "object",
             "properties": {
                 "created_at": {
-                    "type": "string"
-                },
-                "id": {
                     "type": "string"
                 },
                 "login": {
@@ -719,6 +808,20 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "user_data": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserDataList": {
+            "type": "object",
+            "properties": {
+                "user_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserData"
+                    }
                 }
             }
         }

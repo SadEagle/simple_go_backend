@@ -1,0 +1,11 @@
+FROM golang:tip-trixie AS go_build
+COPY ./. /backend_go
+WORKDIR /backend_go
+RUN go build -o backend_go
+
+
+FROM golang:tip-trixie
+COPY --from=go_build ./backend_go .
+CMD [ "./backend_go" ]
+
+EXPOSE 8080

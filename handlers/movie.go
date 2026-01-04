@@ -18,7 +18,7 @@ import (
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "Movie ID"
-// @Success      200  {object}  models.MovieResponse
+// @Success      200  {object}  models.Movie
 // @Failure      404  {object}	map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /movie/{id} [get]
@@ -33,11 +33,35 @@ func GetMovieHandlerMake(db *sql.DB) http.HandlerFunc {
 		}
 
 		rw.Header().Set("Content-Type", "application/json")
-		movieByte := movie.ToResponse()
-		writeResponseBody(rw, movieByte, "movie")
+		writeResponseBody(rw, movie, "movie")
 
 	}
 	return GetMovieHandler
+}
+
+// @Summary      Show movie list
+// @Description  Get movie list
+// @Tags         movie
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  models.MovieList
+// @Failure      404  {object}	map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /movie [get]
+func GetMovieListHandlerMake(db *sql.DB) http.HandlerFunc {
+	GetMovieListHandler := func(rw http.ResponseWriter, r *http.Request) {
+		movieList, err := crudl.GetMovieListDB(db)
+		if err != nil {
+			log.Println(err)
+			http.Error(rw, "Can't get movie list", 500)
+			return
+		}
+
+		rw.Header().Set("Content-Type", "application/json")
+		writeResponseBody(rw, movieList, "movie")
+
+	}
+	return GetMovieListHandler
 }
 
 // @Summary      Update movie
@@ -47,7 +71,7 @@ func GetMovieHandlerMake(db *sql.DB) http.HandlerFunc {
 // @Produce      json
 // @Param        id   path      string  true  "Movie ID"
 // @Param        request 		body	models.UpdateMovieRequest  true  "Movie creation data"
-// @Success      200  {object}  models.MovieResponse
+// @Success      200  {object}  models.Movie
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
@@ -74,8 +98,7 @@ func UpdateMovieHandlerMake(db *sql.DB) http.HandlerFunc {
 		}
 
 		rw.Header().Set("Content-Type", "application/json")
-		movieByte := movie.ToResponse()
-		writeResponseBody(rw, movieByte, "movie")
+		writeResponseBody(rw, movie, "movie")
 	}
 	return UpdateMovieHandler
 }
@@ -86,7 +109,7 @@ func UpdateMovieHandlerMake(db *sql.DB) http.HandlerFunc {
 // @Accept       json
 // @Produce      json
 // @Param        request 		body	models.CreateMovieRequest  true  "Movie creation data"
-// @Success      201  {object}  models.MovieResponse
+// @Success      201  {object}  models.Movie
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
@@ -113,8 +136,7 @@ func CreateMovieHandlerMake(db *sql.DB) http.HandlerFunc {
 
 		rw.WriteHeader(201) // 201 - Create
 		rw.Header().Set("Content-Type", "application/json")
-		movieByte := movie.ToResponse()
-		writeResponseBody(rw, movieByte, "movie")
+		writeResponseBody(rw, movie, "movie list")
 	}
 	return CreateMovieHandler
 }
@@ -124,7 +146,7 @@ func CreateMovieHandlerMake(db *sql.DB) http.HandlerFunc {
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "Movie ID"
-// @Success      204  {object}  models.MovieResponse
+// @Success      204  {object}  models.Movie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /movie/{id} [delete]

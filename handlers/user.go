@@ -18,7 +18,7 @@ import (
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "User ID"
-// @Success      200  {object}  models.UserDataResponse
+// @Success      200  {object}  models.UserData
 // @Failure      404  {object}	map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{id} [get]
@@ -31,11 +31,34 @@ func GetUserHandlerMake(db *sql.DB) http.HandlerFunc {
 			http.Error(rw, fmt.Sprintf("Can't get user id: %s\n", id), 404)
 			return
 		}
-		userByte := user.ToResponse()
-		writeResponseBody[models.UserDataResponse](rw, userByte, "user")
+		writeResponseBody(rw, user, "user")
 
 	}
 	return GetUserHandler
+}
+
+// @Summary      Show user list
+// @Description  Get user list
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  models.UserDataList
+// @Failure      404  {object}	map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /user [get]
+func GetUserListHandlerMake(db *sql.DB) http.HandlerFunc {
+	GetUserListHandler := func(rw http.ResponseWriter, r *http.Request) {
+		userList, err := crudl.GetUserListDB(db)
+		if err != nil {
+			log.Println(err)
+			http.Error(rw, "Can't get user list", 500)
+			return
+		}
+
+		rw.Header().Set("Content-Type", "application/json")
+		writeResponseBody(rw, userList, "user list")
+	}
+	return GetUserListHandler
 }
 
 // @Summary      Update user
@@ -45,7 +68,7 @@ func GetUserHandlerMake(db *sql.DB) http.HandlerFunc {
 // @Produce      json
 // @Param        id   path      string  true  "User ID"
 // @Param        request 		body	models.UpdateUserDataRequest  true  "User creation data"
-// @Success      200  {object}  models.UserDataResponse
+// @Success      200  {object}  models.UserData
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
@@ -62,17 +85,17 @@ func UpdateUserHandlerMake(db *sql.DB) http.HandlerFunc {
 			http.Error(rw, "Can't proceed body request", 400)
 			return
 		}
-		id := r.PathValue("id")
+		user_id := r.PathValue("id")
 
-		user, err := crudl.UpdateUserDataDB(db, updateUserdata, id)
+		fmt.Println(updateUserdata)
+		user, err := crudl.UpdateUserDataDB(db, updateUserdata, user_id)
 		if err != nil {
 			log.Println(err)
 			http.Error(rw, "Can't update user", 404)
 			return
 		}
 
-		userByte := user.ToResponse()
-		writeResponseBody[models.UserDataResponse](rw, userByte, "user")
+		writeResponseBody(rw, user, "user")
 	}
 	return UpdateUserHandler
 }
@@ -83,7 +106,7 @@ func UpdateUserHandlerMake(db *sql.DB) http.HandlerFunc {
 // @Accept       json
 // @Produce      json
 // @Param        request 		body	models.CreateUserDataRequest  true  "User creation data"
-// @Success      201  {object}  models.UserDataResponse
+// @Success      201  {object}  models.UserData
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
@@ -109,8 +132,7 @@ func CreateUserHandlerMake(db *sql.DB) http.HandlerFunc {
 		}
 
 		rw.WriteHeader(201) // 204 - Created
-		userByte := user.ToResponse()
-		writeResponseBody(rw, userByte, "user")
+		writeResponseBody(rw, user, "user")
 	}
 	return CreateUserHandler
 }
@@ -120,7 +142,7 @@ func CreateUserHandlerMake(db *sql.DB) http.HandlerFunc {
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "User ID"
-// @Success      204  {object}  models.UserDataResponse
+// @Success      204  {object}  models.UserData
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{id} [delete]

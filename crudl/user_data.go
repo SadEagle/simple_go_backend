@@ -26,8 +26,8 @@ func CreateUserDataDB(db *sql.DB, userCreate models.CreateUserDataRequest) (mode
 }
 
 // Write correctly
-func UpdateUserDataDB(db *sql.DB, userUpdate models.UpdateUserDataRequest, id string) (models.UserData, error) {
-	var updateScheme = ` UPDATE user_data SET `
+func UpdateUserDataDB(db *sql.DB, userUpdate models.UpdateUserDataRequest, user_id string) (models.UserData, error) {
+	var updateSchema = ` UPDATE user_data SET `
 	updates := []string{}
 	if userUpdate.Login != nil {
 		updates = append(updates, fmt.Sprintf("login = '%s'", *userUpdate.Login))
@@ -35,15 +35,15 @@ func UpdateUserDataDB(db *sql.DB, userUpdate models.UpdateUserDataRequest, id st
 	if userUpdate.Name != nil {
 		updates = append(updates, fmt.Sprintf("name = '%s'", *userUpdate.Name))
 	}
-	if userUpdate.Login != nil {
+	if userUpdate.Password != nil {
 		updates = append(updates, fmt.Sprintf("password = '%s'", *userUpdate.Password))
 	}
 	updateString := strings.Join(updates, ", ")
-	updateScheme += updateString
-	updateScheme += fmt.Sprintf("\n WHERE id = '%s'", id)
-	updateScheme += "\n RETURNING id, name, login, password, created_at"
+	updateSchema += updateString
+	updateSchema += fmt.Sprintf("\n WHERE id = '%s'", user_id)
+	updateSchema += "\n RETURNING id, name, login, password, created_at"
 
-	res := db.QueryRow(updateScheme)
+	res := db.QueryRow(updateSchema)
 
 	user := models.UserData{}
 	err := res.Scan(&user.ID, &user.Name, &user.Login, &user.Password, &user.CreatedAt)
@@ -67,6 +67,31 @@ func GetUserDB(db *sql.DB, id string) (models.UserData, error) {
 		return models.UserData{}, fmt.Errorf("scanning requested user: %w", err)
 	}
 	return user, nil
+}
+
+func GetUserListDB(db *sql.DB) (models.UserDataList, error) {
+	var getMovieListSchema = `
+		SELECT id, name, login, password, created_at
+		FROM user_data
+		`
+	resRows, err := db.Query(getMovieListSchema)
+	if err != nil {
+		return models.UserDataList{}, fmt.Errorf("get user list for user: %w", err)
+	}
+	defer resRows.Close()
+
+	userList := models.UserDataList{}
+	for resRows.Next() {
+		var user = models.UserData{}
+		if err := resRows.Scan(&user.ID, &user.Name, &user.Login, &user.Password, &user.CreatedAt); err != nil {
+			return models.UserDataList{}, fmt.Errorf("scanning getting rows")
+		}
+		userList.UserList = append(userList.UserList, user)
+	}
+	if err := resRows.Err(); err != nil {
+		return models.UserDataList{}, fmt.Errorf("check for errors from iteration over rows: %w", err)
+	}
+	return userList, nil
 }
 
 func DeleteUserDB(db *sql.DB, id string) error {

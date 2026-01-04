@@ -11,11 +11,11 @@ import (
 )
 
 var c = db.Config{
-	Host:     "localhost",
+	Host:     "dev-db",
 	Port:     5432,
 	Database: "movie_server",
 	User:     "movie_manager",
-	Password: "123",
+	Password: "dev_passwd",
 	SSLMode:  "disable",
 }
 
@@ -49,17 +49,16 @@ func main() {
 	mux := http.NewServeMux()
 
 	// user
-	updateUserHandler := handlers.UpdateUserHandlerMake(db)
-
 	mux.HandleFunc("GET /user/{id}", handlers.GetUserHandlerMake(db))
+	mux.HandleFunc("GET /user", handlers.GetUserListHandlerMake(db))
 	mux.HandleFunc("POST /user", handlers.CreateUserHandlerMake(db))
-	mux.HandleFunc("PATCH /user/{id}", updateUserHandler)
+	mux.HandleFunc("PATCH /user/{id}", handlers.UpdateUserHandlerMake(db))
 	mux.HandleFunc("DELETE /user/{id}", handlers.DeleteUserHandler(db))
 	// movie
 	mux.HandleFunc("GET /movie/{id}", handlers.GetMovieHandlerMake(db))
+	mux.HandleFunc("GET /movie", handlers.GetMovieListHandlerMake(db))
 	mux.HandleFunc("POST /movie", handlers.CreateMovieHandlerMake(db))
-	updateMovieHandler := handlers.UpdateMovieHandlerMake(db)
-	mux.HandleFunc("PATCH /movie/{id}", updateMovieHandler)
+	mux.HandleFunc("PATCH /movie/{id}", handlers.UpdateMovieHandlerMake(db))
 	mux.HandleFunc("DELETE /movie/{id}", handlers.DeleteMovieHandlerMake(db))
 	// favorite_movie
 	mux.HandleFunc("GET /user/{user_id}/favorite_movie", handlers.GetFavoriteMovieListHandlerMake(db))

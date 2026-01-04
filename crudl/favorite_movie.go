@@ -42,21 +42,21 @@ func GetFavoriteMovieListDB(db *sql.DB, user_id string) (models.FavoriteMovieLis
 		FROM favorite_movie
 		WHERE user_id = $1
 		`
-	rows, err := db.Query(getListSchema, user_id)
+	resRows, err := db.Query(getListSchema, user_id)
 	if err != nil {
 		return models.FavoriteMovieList{}, fmt.Errorf("get favorite_movie list for user: %w", err)
 	}
-	defer rows.Close()
+	defer resRows.Close()
 
 	favMovieList := models.FavoriteMovieList{}
-	for rows.Next() {
+	for resRows.Next() {
 		var favMovie models.FavoriteMovie
-		if err := rows.Scan(&favMovie.UserID, &favMovie.MovieID); err != nil {
+		if err := resRows.Scan(&favMovie.UserID, &favMovie.MovieID); err != nil {
 			return models.FavoriteMovieList{}, fmt.Errorf("reading favorite movie list: %w", err)
 		}
 		favMovieList.FavMovieList = append(favMovieList.FavMovieList, favMovie)
 	}
-	if err := rows.Err(); err != nil {
+	if err := resRows.Err(); err != nil {
 		return models.FavoriteMovieList{}, fmt.Errorf("check for errors from iteration over rows: %w", err)
 	}
 	return favMovieList, err

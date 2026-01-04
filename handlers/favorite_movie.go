@@ -13,7 +13,7 @@ import (
 // @Accept       json
 // @Produce      json
 // @Param        user_id   	path      string  true  "User ID"
-// @Success      200  {object}  models.FavoriteMovieListResponse
+// @Success      200  {object}  models.FavoriteMovieList
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{user_id}/favorite_movie [get]
@@ -26,8 +26,7 @@ func GetFavoriteMovieListHandlerMake(db *sql.DB) http.HandlerFunc {
 			http.Error(rw, fmt.Sprintf("Can't get favorite_movie list of user: %s", user_id), 404)
 			return
 		}
-		favMovieListByte := favMovieList.ToResponse()
-		writeResponseBody(rw, favMovieListByte, "favorite_move")
+		writeResponseBody(rw, favMovieList, "favorite_move")
 	}
 	return AddFavoriteMovieHandler
 }
@@ -38,7 +37,7 @@ func GetFavoriteMovieListHandlerMake(db *sql.DB) http.HandlerFunc {
 // @Produce      json
 // @Param        user_id   	path      string  true  "User ID"
 // @Param        movie_id   path      string  true  "Movie ID"
-// @Success      200  {object}  models.FavoriteMovieResponse
+// @Success      200  {object}  models.FavoriteMovie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{user_id}/favorite_movie/{movie_id} [post]
@@ -53,8 +52,7 @@ func AddFavoriteMovieHandlerMake(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		rw.WriteHeader(201) // 201 - Create
-		favMovieByte := favMovie.ToResponse()
-		writeResponseBody(rw, favMovieByte, "favorite movie")
+		writeResponseBody(rw, favMovie, "favorite movie")
 	}
 	return AddFavoriteMovieHandler
 }
@@ -65,7 +63,7 @@ func AddFavoriteMovieHandlerMake(db *sql.DB) http.HandlerFunc {
 // @Produce      json
 // @Param        user_id   	path      string  true  "User ID"
 // @Param        movie_id   path      string  true  "Movie ID"
-// @Success      204  {object}  models.FavoriteMovieResponse
+// @Success      204  {object}  models.FavoriteMovie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{user_id}/favorite_movie/{movie_id} [delete]

@@ -1,23 +1,19 @@
 package main
 
 import (
-	"github.com/swaggo/http-swagger/v2"
+	"fmt"
 	"log"
 	"movie_backend_go/db"
+	"movie_backend_go/db/sqlc"
 	_ "movie_backend_go/docs"
 	"movie_backend_go/handlers"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
-)
 
-var c = db.Config{
-	Host:     "dev-db",
-	Port:     5432,
-	Database: "movie_server",
-	User:     "movie_manager",
-	Password: "dev_passwd",
-	SSLMode:  "disable",
-}
+	"github.com/swaggo/http-swagger/v2"
+)
 
 // @title           movie_backend_go
 // @version         1.0
@@ -29,15 +25,33 @@ var c = db.Config{
 // @externalDocs.description  OpenAPI
 // @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
-	db, err := db.InitDB(c)
+	port, err := strconv.Atoi(os.Getenv("DB_PORT"))
+	if err != nil {
+		log.Fatalln(fmt.Errorf("parsing port value: %w", err))
+	}
+	text, err := os.ReadFile(os.Getenv("DB_PASSWORD_FILE"))
+	if err != nil {
+		log.Fatalln(fmt.Errorf("reading secret file: %w", err))
+	}
+	c := db.Config{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     port,
+		Database: os.Getenv("DB_NAME"),
+		User:     os.Getenv("DB_USER"),
+		Password: string(text),
+		SSLMode:  "disable",
+	}
+
+	dbPool, err := db.InitDB(c)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer db.Close()
+	defer dbPool.Close()
+	queries := sqlc.New(dbPool)
 
 	ping_db_check := func() {
 		for {
-			err = db.Ping()
+			// err = db.Ping()
 			if err != nil {
 				log.Panic(err)
 			}
@@ -47,7 +61,7 @@ func main() {
 	go ping_db_check()
 
 	mux := http.NewServeMux()
-	handlerObj := handlers.HandlerObj{DB: db, Log: *log.Default()}
+	handlerObj := handlers.HandlerObj{DBPool: queries, Log: *log.Default()}
 
 	// user
 	mux.HandleFunc("GET /user/{id}", handlerObj.GetUserHandler)
@@ -63,8 +77,14 @@ func main() {
 	mux.HandleFunc("DELETE /movie/{id}", handlerObj.DeleteMovieHandler)
 	// favorite_movie
 	mux.HandleFunc("GET /user/{user_id}/favorite_movie", handlerObj.GetFavoriteMovieListHandler)
-	mux.HandleFunc("POST /user/{user_id}/favorite_movie/{movie_id}", handlerObj.AddFavoriteMovieHandler)
+	mux.HandleFunc("POST /user/{user_id}/favorite_movie", handlerObj.CreateMovieFavoriteHandler)
+	mux.HandleFunc("PATCH /user/{id}/favorite_movie", handlerObj.UpdateMovieHandler)
 	mux.HandleFunc("DELETE /user/{user_id}/favorite_movie/{movie_id}", handlerObj.DeleteFavoriteMovieHandler)
+	// rated_movie
+	mux.HandleFunc("GET /user/{user_id}/rated_movie", handlerObj.GetFavoriteMovieListHandler)
+	mux.HandleFunc("POST /user/{user_id}/rated_movie", handlerObj.CreateMovieFavoriteHandler)
+	mux.HandleFunc("PATCH /user/{user_id}/rated_movie", handlerObj.UpdateMovieHandler)
+	mux.HandleFunc("DELETE /user/{user_id}/rated_movie/{movie_id}", handlerObj.DeleteFavoriteMovieHandler)
 	// Swagger
 	mux.HandleFunc("GET /swagger/", httpSwagger.WrapHandler)
 

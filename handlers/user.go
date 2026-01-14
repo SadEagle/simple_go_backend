@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"movie_backend_go/crudl"
-	"movie_backend_go/models"
-	"time"
+	"movie_backend_go/db/sqlc"
+	"movie_backend_go/reqmodel"
+
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"net/http"
 )
@@ -19,27 +20,27 @@ import (
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "User ID"
-// @Success      200  {object}  models.UserData
+// @Success      200  {object}  db.UserDatum
 // @Failure      404  {object}	map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{id} [get]
 func (ho *HandlerObj) GetUserHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
 
-	userID, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
+	var userID pgtype.UUID
+	if err := userID.Scan(r.PathValue("user_id")); err != nil {
 		ho.Log.Println(err)
 		http.Error(rw, "Requested user id should contain uuid style", http.StatusBadRequest)
 		return
 	}
-
-	user, err := crudl.GetUserByIDDB(ctx, ho.DB, userID)
+	user, err := crudl.GetUserByID(ctx, ho.DBPool, userID)
 	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, fmt.Sprintf("Can't get user id: %s\n", userID), http.StatusNotFound)
+		ho.Log.Println(fmt.Errorf("proceed getting user: %w", err))
+		http.Error(rw, "Can't proceed getting user", http.StatusBadRequest)
 		return
 	}
+
 	writeResponseBody(rw, user, "user")
 
 }
@@ -49,22 +50,22 @@ func (ho *HandlerObj) GetUserHandler(rw http.ResponseWriter, r *http.Request) {
 // @Tags         user
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  models.UserDataList
+// @Success      200  {object}  reqmodel.UserListResponse
 // @Failure      404  {object}	map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user [get]
 func (ho *HandlerObj) GetUserListHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
-	userList, err := crudl.GetUserListDB(ctx, ho.DB)
+	userList, err := crudl.GetUserList(ctx, ho.DBPool)
 	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, "Can't get user list", http.StatusInternalServerError)
+		ho.Log.Println(fmt.Errorf("proceed getting user list: %w", err))
+		http.Error(rw, "Can't proceed getting user list", http.StatusBadRequest)
 		return
 	}
 
-	rw.Header().Set("Content-Type", "application/json")
-	writeResponseBody(rw, userList, "user list")
+	userListResponse := reqmodel.UserListResponse{UserList: userList}
+	writeResponseBody(rw, userListResponse, "user list")
 }
 
 // @Summary      Update user
@@ -73,40 +74,39 @@ func (ho *HandlerObj) GetUserListHandler(rw http.ResponseWriter, r *http.Request
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "User ID"
-// @Param        request 		body	models.UpdateUserDataRequest  true  "User creation data"
-// @Success      200  {object}  models.UserData
+// @Param        request 		body	reqmodel.UserRequest  true  "User creation data"
+// @Success      200  {object}  db.UserDatum
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{id} [PATCH]
 func (ho *HandlerObj) UpdateUserHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
 	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields() // Strict parsing
+	decoder.DisallowUnknownFields()
 
-	var updateUserdata models.UpdateUserRequest
-	err := decoder.Decode(&updateUserdata)
-	if err != nil && err != io.EOF {
-		ho.Log.Println(err)
-		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
-		return
-	}
-	userID, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
+	var userID pgtype.UUID
+	if err := userID.Scan(r.PathValue("user_id")); err != nil {
 		ho.Log.Println(err)
 		http.Error(rw, "Requested user id should contain uuid style", http.StatusBadRequest)
 		return
 	}
 
-	fmt.Println(updateUserdata)
-	user, err := crudl.UpdateUserDB(ctx, ho.DB, updateUserdata, userID)
-	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, "Can't update user", http.StatusNotFound)
+	var userRequest reqmodel.UserRequest
+	if err := decoder.Decode(&userRequest); err != nil && err != io.EOF {
+		ho.Log.Println(fmt.Errorf("proceed body request: %w", err))
+		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
 		return
 	}
 
+	userUpdate := sqlc.UpdateUserParams{ID: userID, Name: userRequest.Name, Login: userRequest.Login, Password: userRequest.Password}
+	user, err := crudl.UpdateUser(ctx, ho.DBPool, userUpdate)
+	if err != nil {
+		ho.Log.Println(fmt.Errorf("proceed update user: %w", err))
+		http.Error(rw, "Can't proceed update user", http.StatusBadRequest)
+		return
+	}
 	writeResponseBody(rw, user, "user")
 }
 
@@ -115,29 +115,30 @@ func (ho *HandlerObj) UpdateUserHandler(rw http.ResponseWriter, r *http.Request)
 // @Tags         user
 // @Accept       json
 // @Produce      json
-// @Param        request 		body	models.CreateUserDataRequest  true  "User creation data"
-// @Success      201  {object}  models.UserData
+// @Param        request 		body	reqmodel.UserRequest  true  "User creation data"
+// @Success      201  {object}  db.UserDatum
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user [post]
 func (ho *HandlerObj) CreateUserHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields() // Strict parsing
 
-	var createUserData models.CreateUserRequest
-	err := decoder.Decode(&createUserData)
+	var userRequest reqmodel.UserRequest
+	err := decoder.Decode(&userRequest)
 	if err != nil && err != io.EOF {
-		ho.Log.Println(err)
+		ho.Log.Println(fmt.Errorf("proceed body request: %w", err))
 		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
 		return
 	}
 
-	user, err := crudl.CreateUserDB(ctx, ho.DB, createUserData)
+	userCreate := sqlc.CreateUserParams{Name: userRequest.Name, Login: userRequest.Login, Password: userRequest.Password}
+	user, err := crudl.CreateUser(ctx, ho.DBPool, userCreate)
 	if err != nil {
-		ho.Log.Println(err)
+		ho.Log.Println(fmt.Errorf("proceed user creation: %w", err))
 		http.Error(rw, "Can't create user", http.StatusNotFound)
 		return
 	}
@@ -146,30 +147,31 @@ func (ho *HandlerObj) CreateUserHandler(rw http.ResponseWriter, r *http.Request)
 	writeResponseBody(rw, user, "user")
 }
 
+// @Summary  Delete user
 // @Description  Delete user
 // @Tags         user
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "User ID"
-// @Success      204  {object}  models.UserData
+// @Success      204
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{id} [delete]
 func (ho *HandlerObj) DeleteUserHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
 
-	userID, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
-		ho.Log.Println(err)
+	var userID pgtype.UUID
+	if err := userID.Scan(r.PathValue("user_id")); err != nil {
+		ho.Log.Println(fmt.Errorf("proceed body request: %w", err))
 		http.Error(rw, "Requested user id should contain uuid style", http.StatusBadRequest)
 		return
 	}
 
-	err = crudl.DeleteUserDB(ctx, ho.DB, userID)
+	err := crudl.DeleteUser(ctx, ho.DBPool, userID)
 	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, fmt.Sprintf("Can't delete user id: %s", userID), http.StatusNotFound)
+		ho.Log.Println(fmt.Errorf("proceed user deletion: %w", err))
+		http.Error(rw, "Can't delete user", http.StatusNotFound)
 		return
 	}
 	rw.WriteHeader(http.StatusNoContent)

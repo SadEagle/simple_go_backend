@@ -5,6 +5,14 @@ services:
       - dev-db-network
     ports:
       - 8080:8080
+    secrets:
+      - db_passwd_secret
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PORT=${DB_PORT}
+      - DB_PASSWORD_FILE=/run/secrets/db_passwd_secret
     depends_on:
       dev-db:
         condition: service_healthy
@@ -13,22 +21,18 @@ services:
     image: docker.io/library/postgres:17.6-alpine3.22
     restart: always
     shm_size: 128mb
-    env_file:
-      - ./.env
+    secrets:
+      - db_passwd_secret
     environment:
-      - POSTGRES_DB=${POSTGRES_DEV_DB}
-      - POSTGRES_USER=${POSTGRES_DEV_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_DEV_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_passwd_secret
     volumes:
       - dev-db-volume:/var/lib/postgresql/data
     networks:
       - dev-db-network
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_DEV_USER} -d ${POSTGRES_DEV_DB}",
-        ]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       retries: 5
       start_period: 10s
@@ -39,3 +43,7 @@ networks:
 
 volumes:
   dev-db-volume:
+
+secrets:
+  db_passwd_secret:
+    file: ./env/secrets/db_password.txt

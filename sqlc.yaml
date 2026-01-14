@@ -1,0 +1,18 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "./db/queries/"
+    schema: "./db/migrations/"
+    gen:
+      go:
+        package: "sqlc"
+        out: "db/sqlc/"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+
+        overrides:
+          - column: "user_data.password"
+            go_struct_tag: 'json:"-"'
+          - column: "user_data.is_admin"
+            go_struct_tag: 'json:"-"'

@@ -1,36 +1,17 @@
 definitions:
-  models.CreateMovieRequest:
-    properties:
-      title:
-        type: string
-    type: object
-  models.CreateUserDataRequest:
-    properties:
-      login:
-        type: string
-      name:
-        type: string
-      password:
-        type: string
-    type: object
-  models.FavoriteMovie:
+  db.FavoriteMovie:
     properties:
       movie_id:
         type: string
       user_id:
         type: string
     type: object
-  models.FavoriteMovieList:
+  db.GetMovieByIDRow:
     properties:
-      favorite_movie_list:
-        items:
-          $ref: '#/definitions/models.FavoriteMovie'
-        type: array
-    type: object
-  models.Movie:
-    properties:
+      amount_rates:
+        type: integer
       created_at:
-        type: string
+        $ref: '#/definitions/pgtype.Timestamp'
       id:
         type: string
       rating:
@@ -38,19 +19,118 @@ definitions:
       title:
         type: string
     type: object
-  models.MovieList:
+  db.GetMovieRatingListRow:
+    properties:
+      movie_id:
+        type: string
+      rating:
+        $ref: '#/definitions/pgtype.Int4'
+    type: object
+  db.Movie:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  db.RatedMovie:
+    properties:
+      movie_id:
+        type: string
+      rating:
+        $ref: '#/definitions/pgtype.Int4'
+      user_id:
+        type: string
+    type: object
+  db.UserDatum:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamp'
+      id:
+        type: string
+      is_admin:
+        type: boolean
+      login:
+        type: string
+      name:
+        type: string
+    type: object
+  pgtype.InfinityModifier:
+    enum:
+    - 1
+    - 0
+    - -1
+    format: int32
+    type: integer
+    x-enum-varnames:
+    - Infinity
+    - Finite
+    - NegativeInfinity
+  pgtype.Int4:
+    properties:
+      int32:
+        format: int32
+        type: integer
+      valid:
+        type: boolean
+    type: object
+  pgtype.Timestamp:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        description: Time zone will be ignored when encoding to PostgreSQL.
+        type: string
+      valid:
+        type: boolean
+    type: object
+  reqmodel.FavoriteMovieListResponse:
+    properties:
+      favorite_movie_ids:
+        items:
+          type: string
+        type: array
+      user_id:
+        type: string
+    type: object
+  reqmodel.MovieListResponse:
     properties:
       movie_list:
         items:
-          $ref: '#/definitions/models.Movie'
+          $ref: '#/definitions/db.Movie'
         type: array
     type: object
-  models.UpdateMovieRequest:
+  reqmodel.MovieRequest:
     properties:
       title:
         type: string
     type: object
-  models.UpdateUserDataRequest:
+  reqmodel.RatedMovieListResponse:
+    properties:
+      rated_movie_list:
+        items:
+          $ref: '#/definitions/db.GetMovieRatingListRow'
+        type: array
+      user_id:
+        type: string
+    type: object
+  reqmodel.RatedMovieRequest:
+    properties:
+      movie_id:
+        type: string
+      rating:
+        $ref: '#/definitions/pgtype.Int4'
+    type: object
+  reqmodel.UserListResponse:
+    properties:
+      user_list:
+        items:
+          $ref: '#/definitions/db.UserDatum'
+        type: array
+    type: object
+  reqmodel.UserRequest:
     properties:
       login:
         type: string
@@ -58,24 +138,6 @@ definitions:
         type: string
       password:
         type: string
-    type: object
-  models.UserData:
-    properties:
-      created_at:
-        type: string
-      login:
-        type: string
-      name:
-        type: string
-      user_data:
-        type: string
-    type: object
-  models.UserDataList:
-    properties:
-      user_list:
-        items:
-          $ref: '#/definitions/models.UserData'
-        type: array
     type: object
 externalDocs:
   description: OpenAPI
@@ -99,7 +161,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.MovieList'
+            $ref: '#/definitions/reqmodel.MovieListResponse'
         "404":
           description: Not Found
           schema:
@@ -125,20 +187,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.CreateMovieRequest'
+          $ref: '#/definitions/reqmodel.MovieRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.Movie'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/db.Movie'
         "404":
           description: Not Found
           schema:
@@ -170,8 +226,6 @@ paths:
       responses:
         "204":
           description: No Content
-          schema:
-            $ref: '#/definitions/models.Movie'
         "404":
           description: Not Found
           schema:
@@ -202,7 +256,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Movie'
+            $ref: '#/definitions/db.GetMovieByIDRow'
         "404":
           description: Not Found
           schema:
@@ -233,20 +287,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.UpdateMovieRequest'
+          $ref: '#/definitions/reqmodel.MovieRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Movie'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/db.Movie'
         "404":
           description: Not Found
           schema:
@@ -273,7 +321,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.UserDataList'
+            $ref: '#/definitions/reqmodel.UserListResponse'
         "404":
           description: Not Found
           schema:
@@ -299,14 +347,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.CreateUserDataRequest'
+          $ref: '#/definitions/reqmodel.UserRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.UserData'
+            $ref: '#/definitions/db.UserDatum'
         "400":
           description: Bad Request
           schema:
@@ -344,8 +392,6 @@ paths:
       responses:
         "204":
           description: No Content
-          schema:
-            $ref: '#/definitions/models.UserData'
         "404":
           description: Not Found
           schema:
@@ -376,7 +422,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.UserData'
+            $ref: '#/definitions/db.UserDatum'
         "404":
           description: Not Found
           schema:
@@ -407,14 +453,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.UpdateUserDataRequest'
+          $ref: '#/definitions/reqmodel.UserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.UserData'
+            $ref: '#/definitions/db.UserDatum'
         "400":
           description: Bad Request
           schema:
@@ -453,7 +499,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.FavoriteMovieList'
+            $ref: '#/definitions/reqmodel.FavoriteMovieListResponse'
         "404":
           description: Not Found
           schema:
@@ -489,8 +535,6 @@ paths:
       responses:
         "204":
           description: No Content
-          schema:
-            $ref: '#/definitions/models.FavoriteMovie'
         "404":
           description: Not Found
           schema:
@@ -508,7 +552,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Add favorite movie
+      description: Add movie to favorite
       parameters:
       - description: User ID
         in: path
@@ -526,7 +570,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.FavoriteMovie'
+            $ref: '#/definitions/db.FavoriteMovie'
         "404":
           description: Not Found
           schema:
@@ -541,4 +585,145 @@ paths:
             type: object
       tags:
       - favorite_movie
+  /user/{user_id}/rated_movie:
+    get:
+      consumes:
+      - application/json
+      description: Get rated by user movie info
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/reqmodel.RatedMovieListResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - rated_movie
+    patch:
+      consumes:
+      - application/json
+      description: Update movie rating
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Updated rating
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/reqmodel.RatedMovieRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.RatedMovie'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - rated_movie
+    post:
+      consumes:
+      - application/json
+      description: Rate movie
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Rate movie data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/reqmodel.RatedMovieRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.RatedMovie'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - rated_movie
+  /user/{user_id}/rated_movie/{movie_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete movie rating
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Movie ID
+        in: path
+        name: movie_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      tags:
+      - rated_movie
 swagger: "2.0"

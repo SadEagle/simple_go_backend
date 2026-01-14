@@ -19,9 +19,15 @@
       };
 
       devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
+        nativeBuildInputs = with pkgs; [
           go
+        ];
+        buildInputs = with pkgs; [
           go-swag
+          sqlc
+          (go-migrate.overrideAttrs (oldAttrs: {
+            tags = [ "postgres" ];
+          }))
         ];
       };
     };

@@ -6,114 +6,163 @@ import (
 	"fmt"
 	"io"
 	"movie_backend_go/crudl"
-	"movie_backend_go/models"
-	"net/http"
-	"time"
+	"movie_backend_go/db/sqlc"
+	"movie_backend_go/reqmodel"
 
-	"github.com/google/uuid"
+	"net/http"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// @Description  Get user rated_movie list
+// @Summary			 Get  movie rating
+// @Description  Get movie rating by user id
 // @Tags         rated_movie
 // @Accept       json
 // @Produce      json
 // @Param        user_id   	path      string  true  "User ID"
-// @Success      200  {object}  models.RatedMovieList
+// @Success      200  {object}  reqmodel.RatedMovieListResponse
 // @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
 // @Router       /user/{user_id}/rated_movie [get]
 func (ho *HandlerObj) GetRatedMovieListHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
 
-	userID, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
+	var userID pgtype.UUID
+	if err := userID.Scan(r.PathValue("user_id")); err != nil {
 		ho.Log.Println(err)
-		http.Error(rw, "Requested user id should contain uuid", http.StatusBadRequest)
+		http.Error(rw, "Requested user id should contain uuid style", http.StatusBadRequest)
 		return
 	}
 
-	ratedMovieList, err := crudl.GetRatedMovieListDB(ctx, ho.DB, userID)
+	ratedMovieList, err := crudl.GetMovieRatingList(ctx, ho.DBPool, userID)
 	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, fmt.Sprintf("Can't get rated movie list of user: %s", userID), http.StatusNotFound)
+		ho.Log.Println(fmt.Errorf("proceed rated movie list: %w", err))
+		http.Error(rw, "Can't proceed rated movie list", http.StatusNotFound)
 		return
 	}
-	writeResponseBody(rw, ratedMovieList, "rated move list")
+	ratedMovieListResponse := reqmodel.RatedMovieListResponse{RatedMovieList: ratedMovieList}
+
+	writeResponseBody(rw, ratedMovieListResponse, "rated move list")
 }
 
-// @Description  Get user rated_movie list
+// @Summary			 Get  movie rating
+// @Description  Rate movie
 // @Tags         rated_movie
 // @Accept       json
 // @Produce      json
 // @Param        user_id   	path      string  true  "User ID"
-// @Param        request   	body      models.RatedMovieListElem  true  "Rate movie data"
-// @Success      200  {object}  models.RatedMovie
+// @Param        request   	body      reqmodel.RatedMovieRequest  true  "Rate movie data"
+// @Success      200  {object}  db.RatedMovie
 // @Failure      404  {object}  map[string]string
-// @Router       /user/{user_id}/rated_movie [get]
-func (ho *HandlerObj) AddRatedMovieHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+// @Failure      500  {object}  map[string]string
+// @Router       /user/{user_id}/rated_movie [post]
+func (ho *HandlerObj) CreateRatedMovieHandler(rw http.ResponseWriter, r *http.Request) {
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	userID, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
+	var userID pgtype.UUID
+	if err := userID.Scan(r.PathValue("user_id")); err != nil {
 		ho.Log.Println(err)
-		http.Error(rw, "Requested user id should contain uuid", http.StatusBadRequest)
+		http.Error(rw, "Requested user id should contain uuid style", http.StatusBadRequest)
 		return
 	}
 
-	var ratedMovieElem models.RatedMovieElem
-	err = decoder.Decode(&ratedMovieElem)
+	var ratedMovieRequest reqmodel.RatedMovieRequest
+	err := decoder.Decode(&ratedMovieRequest)
 	if err != nil && err != io.EOF {
 		ho.Log.Println(err)
 		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
 		return
 	}
+	ratedMovieCreate := sqlc.CreateMovieRatingParams{UserID: userID, MovieID: ratedMovieRequest.MovieID, Rating: ratedMovieRequest.Rating}
 
-	ratedMovieList, err := crudl.GetRatedMovieListDB(ctx, ho.DB, userID)
+	ratedMovie, err := crudl.CreateMovieRating(ctx, ho.DBPool, ratedMovieCreate)
 	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, fmt.Sprintf("Can't get rated movie list of user: %s", userID), http.StatusNotFound)
+		ho.Log.Println(fmt.Errorf("proceed rated movie creation: %w", err))
+		http.Error(rw, "Can't create movie rating", http.StatusBadRequest)
 		return
 	}
-	writeResponseBody(rw, ratedMovieList, "rated move list")
+	writeResponseBody(rw, ratedMovie, "rated move list")
 }
 
-// @Description  Delete favorite movie
-// @Tags         favorite_movie
+// @Summary			 Update movie rating
+// @Description  Update movie rating
+// @Tags         rated_movie
+// @Accept       json
+// @Produce      json
+// @Param        user_id   	path      string  true  "User ID"
+// @Param        request   	body      reqmodel.RatedMovieRequest  true  "Updated rating"
+// @Success      200  {object}  db.RatedMovie
+// @Failure      404  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /user/{user_id}/rated_movie [patch]
+func (ho *HandlerObj) UpdateRatedMovieHandler(rw http.ResponseWriter, r *http.Request) {
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
+	defer close()
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	var userID pgtype.UUID
+	if err := userID.Scan(r.PathValue("user_id")); err != nil {
+		ho.Log.Println(err)
+		http.Error(rw, "Requested user id should contain uuid style", http.StatusBadRequest)
+		return
+	}
+
+	var ratedMovieRequest reqmodel.RatedMovieRequest
+	err := decoder.Decode(&ratedMovieRequest)
+	if err != nil && err != io.EOF {
+		ho.Log.Println(err)
+		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
+		return
+	}
+	ratedMovieUpdate := sqlc.UpdateMoveRatingParams{UserID: userID, MovieID: ratedMovieRequest.MovieID, Rating: ratedMovieRequest.Rating}
+
+	ratedMovie, err := crudl.UpdateMovieRating(ctx, ho.DBPool, ratedMovieUpdate)
+	if err != nil {
+		ho.Log.Println(fmt.Errorf("proceed rated movie creation: %w", err))
+		http.Error(rw, "Can't update movie rating", http.StatusBadRequest)
+		return
+	}
+	writeResponseBody(rw, ratedMovie, "rated move list")
+}
+
+// @Summary			 Delete movie rating
+// @Description  Delete certain movie rating
+// @Tags         rated_movie
 // @Accept       json
 // @Produce      json
 // @Param        user_id   	path      string  true  "User ID"
 // @Param        movie_id   path      string  true  "Movie ID"
-// @Success      204  {object}  models.FavoriteMovie
+// @Success      204
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Router       /user/{user_id}/favorite_movie/{movie_id} [delete]
+// @Router       /user/{user_id}/rated_movie/{movie_id} [delete]
 func (ho *HandlerObj) DeleteRatedMovieHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
 
-	userID, err := uuid.Parse(r.PathValue("user_id"))
-	if err != nil {
+	var userID pgtype.UUID
+	if err := userID.Scan(r.PathValue("user_id")); err != nil {
 		ho.Log.Println(err)
-		http.Error(rw, "Requested user id should contain uuid", http.StatusBadRequest)
+		http.Error(rw, "Requested user id should contain uuid style", http.StatusBadRequest)
 		return
 	}
-	movieID, err := uuid.Parse(r.PathValue("movie_id"))
-	if err != nil {
+	var movieID pgtype.UUID
+	if err := movieID.Scan(r.PathValue("movie_id")); err != nil {
 		ho.Log.Println(err)
-		http.Error(rw, "Requested movie id should contain uuid", http.StatusBadRequest)
+		http.Error(rw, "Requested movie id should contain uuid style", http.StatusBadRequest)
 		return
 	}
 
-	err = crudl.DeleteRatedMovieDB(ctx, ho.DB, userID, movieID)
-	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, fmt.Sprintf("Can't delete rated movie user_id: %s, movie_id: %s", userID, userID), http.StatusNotFound)
+	movieRatingDelete := sqlc.DeleteMovieRatingParams{UserID: userID, MovieID: movieID}
+	if err := crudl.DeleteMovieRating(ctx, ho.DBPool, movieRatingDelete); err != nil {
+		ho.Log.Println(fmt.Errorf("proceed delete movie rating request"))
+		http.Error(rw, "Can't delete movie rating", http.StatusBadRequest)
 		return
 	}
 	rw.WriteHeader(http.StatusNoContent)
 }
-
-// TODO: Add update

@@ -33,7 +33,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.MovieList"
+                            "$ref": "#/definitions/reqmodel.MovieListResponse"
                         }
                     },
                     "404": {
@@ -75,7 +75,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.CreateMovieRequest"
+                            "$ref": "#/definitions/reqmodel.MovieRequest"
                         }
                     }
                 ],
@@ -83,16 +83,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.Movie"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/db.Movie"
                         }
                     },
                     "404": {
@@ -142,7 +133,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Movie"
+                            "$ref": "#/definitions/db.GetMovieByIDRow"
                         }
                     },
                     "404": {
@@ -187,10 +178,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "No Content",
-                        "schema": {
-                            "$ref": "#/definitions/models.Movie"
-                        }
+                        "description": "No Content"
                     },
                     "404": {
                         "description": "Not Found",
@@ -238,7 +226,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.UpdateMovieRequest"
+                            "$ref": "#/definitions/reqmodel.MovieRequest"
                         }
                     }
                 ],
@@ -246,16 +234,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Movie"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/db.Movie"
                         }
                     },
                     "404": {
@@ -296,7 +275,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.UserDataList"
+                            "$ref": "#/definitions/reqmodel.UserListResponse"
                         }
                     },
                     "404": {
@@ -338,7 +317,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.CreateUserDataRequest"
+                            "$ref": "#/definitions/reqmodel.UserRequest"
                         }
                     }
                 ],
@@ -346,7 +325,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.UserData"
+                            "$ref": "#/definitions/db.UserDatum"
                         }
                     },
                     "400": {
@@ -405,7 +384,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.UserData"
+                            "$ref": "#/definitions/db.UserDatum"
                         }
                     },
                     "404": {
@@ -450,10 +429,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "No Content",
-                        "schema": {
-                            "$ref": "#/definitions/models.UserData"
-                        }
+                        "description": "No Content"
                     },
                     "404": {
                         "description": "Not Found",
@@ -501,7 +477,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.UpdateUserDataRequest"
+                            "$ref": "#/definitions/reqmodel.UserRequest"
                         }
                     }
                 ],
@@ -509,7 +485,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.UserData"
+                            "$ref": "#/definitions/db.UserDatum"
                         }
                     },
                     "400": {
@@ -567,7 +543,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.FavoriteMovieList"
+                            "$ref": "#/definitions/reqmodel.FavoriteMovieListResponse"
                         }
                     },
                     "404": {
@@ -593,7 +569,7 @@ const docTemplate = `{
         },
         "/user/{user_id}/favorite_movie/{movie_id}": {
             "post": {
-                "description": "Add favorite movie",
+                "description": "Add movie to favorite",
                 "consumes": [
                     "application/json"
                 ],
@@ -623,7 +599,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.FavoriteMovie"
+                            "$ref": "#/definitions/db.FavoriteMovie"
                         }
                     },
                     "404": {
@@ -675,10 +651,221 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "No Content",
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/models.FavoriteMovie"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{user_id}/rated_movie": {
+            "get": {
+                "description": "Get rated by user movie info",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rated_movie"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/reqmodel.RatedMovieListResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Rate movie",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rated_movie"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Rate movie data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/reqmodel.RatedMovieRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.RatedMovie"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update movie rating",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rated_movie"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated rating",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/reqmodel.RatedMovieRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.RatedMovie"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{user_id}/rated_movie/{movie_id}": {
+            "delete": {
+                "description": "Delete movie rating",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rated_movie"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Movie ID",
+                        "name": "movie_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     },
                     "404": {
                         "description": "Not Found",
@@ -703,29 +890,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "models.CreateMovieRequest": {
-            "type": "object",
-            "properties": {
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.CreateUserDataRequest": {
-            "type": "object",
-            "properties": {
-                "login": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.FavoriteMovie": {
+        "db.FavoriteMovie": {
             "type": "object",
             "properties": {
                 "movie_id": {
@@ -736,22 +901,14 @@ const docTemplate = `{
                 }
             }
         },
-        "models.FavoriteMovieList": {
+        "db.GetMovieByIDRow": {
             "type": "object",
             "properties": {
-                "favorite_movie_list": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.FavoriteMovie"
-                    }
-                }
-            }
-        },
-        "models.Movie": {
-            "type": "object",
-            "properties": {
+                "amount_rates": {
+                    "type": "integer"
+                },
                 "created_at": {
-                    "type": "string"
+                    "$ref": "#/definitions/pgtype.Timestamp"
                 },
                 "id": {
                     "type": "string"
@@ -764,18 +921,132 @@ const docTemplate = `{
                 }
             }
         },
-        "models.MovieList": {
+        "db.GetMovieRatingListRow": {
+            "type": "object",
+            "properties": {
+                "movie_id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "$ref": "#/definitions/pgtype.Int4"
+                }
+            }
+        },
+        "db.Movie": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.RatedMovie": {
+            "type": "object",
+            "properties": {
+                "movie_id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "$ref": "#/definitions/pgtype.Int4"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.UserDatum": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "login": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "pgtype.InfinityModifier": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+                1,
+                0,
+                -1
+            ],
+            "x-enum-varnames": [
+                "Infinity",
+                "Finite",
+                "NegativeInfinity"
+            ]
+        },
+        "pgtype.Int4": {
+            "type": "object",
+            "properties": {
+                "int32": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "pgtype.Timestamp": {
+            "type": "object",
+            "properties": {
+                "infinityModifier": {
+                    "$ref": "#/definitions/pgtype.InfinityModifier"
+                },
+                "time": {
+                    "description": "Time zone will be ignored when encoding to PostgreSQL.",
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "reqmodel.FavoriteMovieListResponse": {
+            "type": "object",
+            "properties": {
+                "favorite_movie_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "reqmodel.MovieListResponse": {
             "type": "object",
             "properties": {
                 "movie_list": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Movie"
+                        "$ref": "#/definitions/db.Movie"
                     }
                 }
             }
         },
-        "models.UpdateMovieRequest": {
+        "reqmodel.MovieRequest": {
             "type": "object",
             "properties": {
                 "title": {
@@ -783,7 +1054,43 @@ const docTemplate = `{
                 }
             }
         },
-        "models.UpdateUserDataRequest": {
+        "reqmodel.RatedMovieListResponse": {
+            "type": "object",
+            "properties": {
+                "rated_movie_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.GetMovieRatingListRow"
+                    }
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "reqmodel.RatedMovieRequest": {
+            "type": "object",
+            "properties": {
+                "movie_id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "$ref": "#/definitions/pgtype.Int4"
+                }
+            }
+        },
+        "reqmodel.UserListResponse": {
+            "type": "object",
+            "properties": {
+                "user_list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.UserDatum"
+                    }
+                }
+            }
+        },
+        "reqmodel.UserRequest": {
             "type": "object",
             "properties": {
                 "login": {
@@ -794,34 +1101,6 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
-                }
-            }
-        },
-        "models.UserData": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "login": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "user_data": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.UserDataList": {
-            "type": "object",
-            "properties": {
-                "user_list": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.UserData"
-                    }
                 }
             }
         }

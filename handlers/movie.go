@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 	"movie_backend_go/crudl"
-	"movie_backend_go/models"
-	"time"
+	"movie_backend_go/db/sqlc"
 
 	"net/http"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+	"movie_backend_go/reqmodel"
 )
 
 // @Summary      Show movie
@@ -20,27 +20,27 @@ import (
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "Movie ID"
-// @Success      200  {object}  models.Movie
+// @Success      200  {object}  db.GetMovieByIDRow
 // @Failure      404  {object}	map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /movie/{id} [get]
 func (ho *HandlerObj) GetMovieHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
-	movieID, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
+
+	var movieID pgtype.UUID
+	if err := movieID.Scan(r.PathValue("movie_id")); err != nil {
 		ho.Log.Println(err)
 		http.Error(rw, "Requested movie id should contain uuid style", http.StatusBadRequest)
 		return
 	}
-	movie, err := crudl.GetMovieByIDDB(ctx, ho.DB, movieID)
+	movie, err := crudl.GetMovieByID(ctx, ho.DBPool, movieID)
 	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, fmt.Sprintf("Can't get movie id: %s\n", movieID), http.StatusNotFound)
+		ho.Log.Println(fmt.Errorf("get movie by id: %w", err))
+		http.Error(rw, "Can't get movie by id", http.StatusBadRequest)
 		return
 	}
 
-	rw.Header().Set("Content-Type", "application/json")
 	writeResponseBody(rw, movie, "movie")
 
 }
@@ -50,23 +50,23 @@ func (ho *HandlerObj) GetMovieHandler(rw http.ResponseWriter, r *http.Request) {
 // @Tags         movie
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}  models.MovieList
+// @Success      200  {object}  reqmodel.MovieListResponse
 // @Failure      404  {object}	map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /movie [get]
 func (ho *HandlerObj) GetMovieListHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
-	movieList, err := crudl.GetMovieListDB(ctx, ho.DB)
+
+	movieList, err := crudl.GetMovieList(ctx, ho.DBPool)
 	if err != nil {
 		ho.Log.Println(err)
-		http.Error(rw, "Can't get movie list", http.StatusInternalServerError)
+		http.Error(rw, "Can't get movie list", http.StatusBadRequest)
 		return
 	}
 
-	rw.Header().Set("Content-Type", "application/json")
-	writeResponseBody(rw, movieList, "movie")
-
+	movieListResponse := reqmodel.MovieListResponse{MovieList: movieList}
+	writeResponseBody(rw, movieListResponse, "movie")
 }
 
 // @Summary      Update movie
@@ -75,40 +75,40 @@ func (ho *HandlerObj) GetMovieListHandler(rw http.ResponseWriter, r *http.Reques
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "Movie ID"
-// @Param        request 		body	models.UpdateMovieRequest  true  "Movie creation data"
-// @Success      200  {object}  models.Movie
-// @Failure      400  {object}  map[string]string
+// @Param        request 		body	reqmodel.MovieRequest  true  "Movie creation data"
+// @Success      200  {object}  db.Movie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /movie/{id} [patch]
 func (ho *HandlerObj) UpdateMovieHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
+
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var updateMovie models.UpdateMovieRequest
+	var updateMovie reqmodel.MovieRequest
 	err := decoder.Decode(&updateMovie)
 	if err != nil && err != io.EOF {
-		ho.Log.Println(err)
+		ho.Log.Println(fmt.Errorf("proceed body request: %w", err))
 		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
 		return
 	}
-	movieID, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
+
+	var movieID pgtype.UUID
+	if err := movieID.Scan(r.PathValue("movie_id")); err != nil {
 		ho.Log.Println(err)
 		http.Error(rw, "Requested movie id should contain uuid style", http.StatusBadRequest)
 		return
 	}
 
-	movie, err := crudl.UpdateMovieDB(ctx, ho.DB, updateMovie, movieID)
+	movieUpdate := sqlc.UpdateMovieParams{ID: movieID, Title: updateMovie.Title}
+	movie, err := ho.DBPool.UpdateMovie(ctx, movieUpdate)
 	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, "Can't update movie", http.StatusNotFound)
+		ho.Log.Println(fmt.Errorf("proceed body request: %w", err))
+		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
 		return
 	}
-
-	rw.Header().Set("Content-Type", "application/json")
 	writeResponseBody(rw, movie, "movie")
 }
 
@@ -117,27 +117,26 @@ func (ho *HandlerObj) UpdateMovieHandler(rw http.ResponseWriter, r *http.Request
 // @Tags         movie
 // @Accept       json
 // @Produce      json
-// @Param        request 		body	models.CreateMovieRequest  true  "Movie creation data"
-// @Success      201  {object}  models.Movie
-// @Failure      400  {object}  map[string]string
+// @Param        request 		body	reqmodel.MovieRequest  true  "Movie creation data"
+// @Success      201  {object}  db.Movie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /movie [post]
 func (ho *HandlerObj) CreateMovieHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
 	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields() // Strict parsing
+	decoder.DisallowUnknownFields()
 
-	var createMovie models.CreateMovieRequest
-	err := decoder.Decode(&createMovie)
+	var movieCreate reqmodel.MovieRequest
+	err := decoder.Decode(&movieCreate)
 	if err != nil && err != io.EOF {
-		ho.Log.Println(err)
+		ho.Log.Println(fmt.Errorf("proceed body request: %w", err))
 		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
 		return
 	}
 
-	movie, err := crudl.CreateMovieDB(ctx, ho.DB, createMovie)
+	movie, err := crudl.CreateMovie(ctx, ho.DBPool, movieCreate.Title)
 	if err != nil {
 		ho.Log.Println(err)
 		http.Error(rw, "Can't create movie", http.StatusNotFound)
@@ -145,34 +144,34 @@ func (ho *HandlerObj) CreateMovieHandler(rw http.ResponseWriter, r *http.Request
 	}
 
 	rw.WriteHeader(http.StatusCreated)
-	rw.Header().Set("Content-Type", "application/json")
 	writeResponseBody(rw, movie, "movie list")
 }
 
+// @Summary      Delete movie
 // @Description  Delete movie
 // @Tags         movie
 // @Accept       json
 // @Produce      json
 // @Param        id   path      string  true  "Movie ID"
-// @Success      204  {object}  models.Movie
+// @Success      204
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /movie/{id} [delete]
 func (ho *HandlerObj) DeleteMovieHandler(rw http.ResponseWriter, r *http.Request) {
-	ctx, close := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
-	movieID, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
+
+	var movieID pgtype.UUID
+	if err := movieID.Scan(r.PathValue("movie_id")); err != nil {
 		ho.Log.Println(err)
 		http.Error(rw, "Requested movie id should contain uuid style", http.StatusBadRequest)
 		return
 	}
 
-	err = crudl.DeleteMovieDB(ctx, ho.DB, movieID)
-	if err != nil {
-		ho.Log.Println(err)
-		http.Error(rw, fmt.Sprintf("Can't delete movie id: %s", movieID), http.StatusNotFound)
+	if err := crudl.DeleteMovie(ctx, ho.DBPool, movieID); err != nil {
+		ho.Log.Println(fmt.Errorf("proceed delete movie request"))
+		http.Error(rw, "Can't delete movie", http.StatusNotFound)
 		return
 	}
-	rw.WriteHeader(http.StatusCreated)
+	rw.WriteHeader(http.StatusNoContent)
 }

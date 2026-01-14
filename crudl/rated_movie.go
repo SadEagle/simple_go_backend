@@ -2,76 +2,42 @@ package crudl
 
 import (
 	"context"
-	"database/sql"
-	"movie_backend_go/models"
+	db "movie_backend_go/db/sqlc"
 
-	"fmt"
-
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func GetRatedMovieListDB(ctx context.Context, db *sql.DB, userID uuid.UUID) (models.RatedMovieList, error) {
-	ratedMovieListSchema := `
-	SELECT movie_id, rating
-	FROM rated_movie
-	WHERE user_id = $1
-	`
-
-	resRows, err := db.QueryContext(ctx, ratedMovieListSchema, userID)
+func CreateMovieRating(ctx context.Context, querier db.Querier, movieRatingCreate db.CreateMovieRatingParams) (db.RatedMovie, error) {
+	movieRating, err := querier.CreateMovieRating(ctx, movieRatingCreate)
 	if err != nil {
-		return models.RatedMovieList{}, fmt.Errorf("get rated movie list for user: %w", err)
+		return db.RatedMovie{}, err
 	}
-	defer resRows.Close()
-
-	ratedMovieList := models.RatedMovieList{UserID: userID}
-	for resRows.Next() {
-		select {
-		case <-ctx.Done():
-			return models.RatedMovieList{}, fmt.Errorf("context cancelled: %w", ctx.Err())
-		default:
-			// Continue processing
-		}
-
-		ratedMovie := models.RatedMovieElem{}
-		if err := resRows.Scan(&ratedMovie.MovieID); err != nil {
-			return models.RatedMovieList{}, fmt.Errorf("reading rated movie list: %w", err)
-		}
-		ratedMovieList.RatedMovieList = append(ratedMovieList.RatedMovieList, ratedMovie)
-	}
-	if err := resRows.Err(); err != nil {
-		return models.RatedMovieList{}, fmt.Errorf("check for errors from iteration over rows: %w", err)
-	}
-	return ratedMovieList, err
+	return movieRating, err
 }
 
-func AddMovieRatingDB(ctx context.Context, db *sql.DB, userID uuid.UUID, movieData models.RatedMovieElem) (models.RatedMovie, error) {
-	addRatedMovieSchema := `
-	INSERT INTO rated_movie (user_id, movie_id, rating)
-	VALUES ($1, $2, $3)
-	RETURNING user_id, movie_id, rating
-	`
-	res_create := db.QueryRowContext(ctx, addRatedMovieSchema, userID, movieData.MovieID, movieData.Rating)
-	if err := res_create.Err(); err != nil {
-		return models.RatedMovie{}, fmt.Errorf("check QueryRowContext correctness: %w", err)
-	}
-
-	ratedMovie := models.RatedMovie{}
-	err := res_create.Scan(&ratedMovie.MovieID, &ratedMovie.Rating)
+func DeleteMovieRating(ctx context.Context, querier db.Querier, movieRatingDelete db.DeleteMovieRatingParams) error {
+	numDel, err := querier.DeleteMovieRating(ctx, movieRatingDelete)
 	if err != nil {
-		return models.RatedMovie{}, fmt.Errorf("scanning added rated movie: %w", err)
+		return err
 	}
-	return ratedMovie, nil
+	if numDel == 0 {
+		return EmptyDeletionError
+	}
+	return nil
 }
 
-func DeleteRatedMovieDB(ctx context.Context, db *sql.DB, userID uuid.UUID, movieID uuid.UUID) error {
-	var createShema = `
-		DELETE FROM rated_movie
-		WHERE user_id = $1 AND movie_id = $2
-		`
-	res, err := db.ExecContext(ctx, createShema, userID, movieID)
+func GetMovieRatingList(ctx context.Context, querier db.Querier, userID pgtype.UUID) ([]db.GetMovieRatingListRow, error) {
+	movieRatingList, err := querier.GetMovieRatingList(ctx, userID)
 	if err != nil {
-		return fmt.Errorf("delete rated movie: %w", err)
+		return []db.GetMovieRatingListRow{}, err
 	}
+	return movieRatingList, nil
+}
 
-	return checkNonEmptyDeletion(res)
+func UpdateMovieRating(ctx context.Context, querier db.Querier, movieRatingUpdate db.UpdateMoveRatingParams) (db.RatedMovie, error) {
+	movieRating, err := querier.UpdateMoveRating(ctx, movieRatingUpdate)
+	if err != nil {
+		return db.RatedMovie{}, err
+	}
+	return movieRating, nil
 }

@@ -10,7 +10,7 @@ RETURNING *;
 
 -- name: UpdateMoveRating :one
 UPDATE rated_movie SET
-rating = COALESCE($3, rating)
+rating = COALESCE(sqlc.narg(rating), rating)
 WHERE user_id = $1 
   AND movie_id = $2
 RETURNING *;

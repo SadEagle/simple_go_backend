@@ -38,7 +38,6 @@ func (q *Queries) DeleteMovie(ctx context.Context, id pgtype.UUID) (int64, error
 }
 
 const getMovieByID = `-- name: GetMovieByID :one
-
 SELECT id, title, COALESCE(amount_rates, 0), COALESCE(rating, 0), created_at
 FROM (
   select id, title, created_at from movie where id = $1
@@ -56,8 +55,6 @@ type GetMovieByIDRow struct {
 	CreatedAt   pgtype.Timestamp `json:"created_at"`
 }
 
-// COALESCE and LEFT JOIN because rating exist if only at least one person rate movie
-// TODO: check will 2 subquery be faster than one
 func (q *Queries) GetMovieByID(ctx context.Context, id pgtype.UUID) (GetMovieByIDRow, error) {
 	row := q.db.QueryRow(ctx, getMovieByID, id)
 	var i GetMovieByIDRow
@@ -72,7 +69,6 @@ func (q *Queries) GetMovieByID(ctx context.Context, id pgtype.UUID) (GetMovieByI
 }
 
 const getMovieByTitle = `-- name: GetMovieByTitle :one
-
 SELECT id, title, COALESCE(amount_rates, 0), COALESCE(rating, 0), created_at
 FROM (
   select id, title, created_at from movie where title = $1
@@ -88,7 +84,6 @@ type GetMovieByTitleRow struct {
 	CreatedAt   pgtype.Timestamp `json:"created_at"`
 }
 
-// TODO: is it optimal (same as above query)
 func (q *Queries) GetMovieByTitle(ctx context.Context, title string) (GetMovieByTitleRow, error) {
 	row := q.db.QueryRow(ctx, getMovieByTitle, title)
 	var i GetMovieByTitleRow
@@ -136,7 +131,7 @@ RETURNING id, title, created_at
 
 type UpdateMovieParams struct {
 	ID    pgtype.UUID `json:"id"`
-	Title string      `json:"title"`
+	Title *string     `json:"title"`
 }
 
 func (q *Queries) UpdateMovie(ctx context.Context, arg UpdateMovieParams) (Movie, error) {

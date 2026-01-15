@@ -41,19 +41,19 @@ func (ho *HandlerObj) GetRatedMovieListHandler(rw http.ResponseWriter, r *http.R
 		http.Error(rw, "Can't proceed rated movie list", http.StatusNotFound)
 		return
 	}
-	ratedMovieListResponse := reqmodel.RatedMovieListResponse{RatedMovieList: ratedMovieList}
+	ratedMovieListResponse := reqmodel.RatedMovieListResponse{UserID: userID, RatedMovieList: ratedMovieList}
 
 	writeResponseBody(rw, ratedMovieListResponse, "rated move list")
 }
 
-// @Summary			 Get  movie rating
+// @Summary			 Rate movie
 // @Description  Rate movie
 // @Tags         rated_movie
 // @Accept       json
 // @Produce      json
 // @Param        user_id   	path      string  true  "User ID"
 // @Param        request   	body      reqmodel.RatedMovieRequest  true  "Rate movie data"
-// @Success      200  {object}  db.RatedMovie
+// @Success      200  {object}  sqlc.RatedMovie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{user_id}/rated_movie [post]
@@ -95,7 +95,7 @@ func (ho *HandlerObj) CreateRatedMovieHandler(rw http.ResponseWriter, r *http.Re
 // @Produce      json
 // @Param        user_id   	path      string  true  "User ID"
 // @Param        request   	body      reqmodel.RatedMovieRequest  true  "Updated rating"
-// @Success      200  {object}  db.RatedMovie
+// @Success      200  {object}  sqlc.RatedMovie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{user_id}/rated_movie [patch]
@@ -112,14 +112,14 @@ func (ho *HandlerObj) UpdateRatedMovieHandler(rw http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var ratedMovieRequest reqmodel.RatedMovieRequest
-	err := decoder.Decode(&ratedMovieRequest)
+	var ratedMovieUpdateRequest reqmodel.RatedMovieUpdateRequest
+	err := decoder.Decode(&ratedMovieUpdateRequest)
 	if err != nil && err != io.EOF {
 		ho.Log.Println(err)
 		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
 		return
 	}
-	ratedMovieUpdate := sqlc.UpdateMoveRatingParams{UserID: userID, MovieID: ratedMovieRequest.MovieID, Rating: ratedMovieRequest.Rating}
+	ratedMovieUpdate := sqlc.UpdateMoveRatingParams{UserID: userID, MovieID: ratedMovieUpdateRequest.MovieID, Rating: ratedMovieUpdateRequest.Rating}
 
 	ratedMovie, err := crudl.UpdateMovieRating(ctx, ho.DBPool, ratedMovieUpdate)
 	if err != nil {

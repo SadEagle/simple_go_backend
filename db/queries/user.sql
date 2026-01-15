@@ -19,9 +19,9 @@ RETURNING *;
 
 -- name: UpdateUser :one
 UPDATE user_data SET
-  name = COALESCE($2, name),
-  login = COALESCE($3, login),
-  password = COALESCE($4, password)
+  name = COALESCE(sqlc.narg(name), name),
+  login = COALESCE(sqlc.narg(login), login),
+  password = COALESCE(sqlc.narg(password), password)
 WHERE id = $1
 RETURNING *;
 

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	db "movie_backend_go/db/sqlc"
+	"movie_backend_go/db/sqlc"
 	"time"
 
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 const OpTimeContext = 5 * time.Minute
 
 type HandlerObj struct {
-	DBPool db.Querier
+	DBPool sqlc.Querier
 	Log    log.Logger
 }
 

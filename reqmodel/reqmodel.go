@@ -15,13 +15,21 @@ type MovieRequest struct {
 	Title string `json:"title"`
 }
 
+type MovieUpdateRequest struct {
+	Title *string `json:"title"`
+}
 type MovieListResponse struct {
 	MovieList []db.Movie `json:"movie_list"`
 }
 
 type RatedMovieRequest struct {
 	MovieID pgtype.UUID `json:"movie_id"`
-	Rating  pgtype.Int4 `json:"rating"`
+	Rating  int16       `json:"rating"`
+}
+
+type RatedMovieUpdateRequest struct {
+	MovieID pgtype.UUID `json:"movie_id"`
+	Rating  *int16      `json:"rating"`
 }
 
 type RatedMovieListResponse struct {
@@ -34,6 +42,12 @@ type UserRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
+type UserUpdateRequest struct {
+	Name     *string `json:"name"`
+	Login    *string `json:"login"`
+	Password *string `json:"password"`
+}
+
 type UserListResponse struct {
 	UserList []db.UserDatum `json:"user_list"`
 }

@@ -19,11 +19,11 @@ import (
 // @Tags         user
 // @Accept       json
 // @Produce      json
-// @Param        id   path      string  true  "User ID"
-// @Success      200  {object}  db.UserDatum
+// @Param        user_id   path      string  true  "User ID"
+// @Success      200  {object}  sqlc.UserDatum
 // @Failure      404  {object}	map[string]string
 // @Failure      500  {object}  map[string]string
-// @Router       /user/{id} [get]
+// @Router       /user/{user_id} [get]
 func (ho *HandlerObj) GetUserHandler(rw http.ResponseWriter, r *http.Request) {
 	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
@@ -73,13 +73,13 @@ func (ho *HandlerObj) GetUserListHandler(rw http.ResponseWriter, r *http.Request
 // @Tags         user
 // @Accept       json
 // @Produce      json
-// @Param        id   path      string  true  "User ID"
+// @Param        user_id   path      string  true  "User ID"
 // @Param        request 		body	reqmodel.UserRequest  true  "User creation data"
-// @Success      200  {object}  db.UserDatum
+// @Success      200  {object}  sqlc.UserDatum
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Router       /user/{id} [PATCH]
+// @Router       /user/{user_id} [PATCH]
 func (ho *HandlerObj) UpdateUserHandler(rw http.ResponseWriter, r *http.Request) {
 	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
@@ -93,14 +93,14 @@ func (ho *HandlerObj) UpdateUserHandler(rw http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	var userRequest reqmodel.UserRequest
-	if err := decoder.Decode(&userRequest); err != nil && err != io.EOF {
+	var userUpdateRequest reqmodel.UserUpdateRequest
+	if err := decoder.Decode(&userUpdateRequest); err != nil && err != io.EOF {
 		ho.Log.Println(fmt.Errorf("proceed body request: %w", err))
 		http.Error(rw, "Can't proceed body request", http.StatusBadRequest)
 		return
 	}
 
-	userUpdate := sqlc.UpdateUserParams{ID: userID, Name: userRequest.Name, Login: userRequest.Login, Password: userRequest.Password}
+	userUpdate := sqlc.UpdateUserParams{ID: userID, Name: userUpdateRequest.Name, Login: userUpdateRequest.Login, Password: userUpdateRequest.Password}
 	user, err := crudl.UpdateUser(ctx, ho.DBPool, userUpdate)
 	if err != nil {
 		ho.Log.Println(fmt.Errorf("proceed update user: %w", err))
@@ -116,7 +116,7 @@ func (ho *HandlerObj) UpdateUserHandler(rw http.ResponseWriter, r *http.Request)
 // @Accept       json
 // @Produce      json
 // @Param        request 		body	reqmodel.UserRequest  true  "User creation data"
-// @Success      201  {object}  db.UserDatum
+// @Success      201  {object}  sqlc.UserDatum
 // @Failure      400  {object}  map[string]string
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
@@ -152,11 +152,11 @@ func (ho *HandlerObj) CreateUserHandler(rw http.ResponseWriter, r *http.Request)
 // @Tags         user
 // @Accept       json
 // @Produce      json
-// @Param        id   path      string  true  "User ID"
+// @Param        user_id   path      string  true  "User ID"
 // @Success      204
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Router       /user/{id} [delete]
+// @Router       /user/{user_id} [delete]
 func (ho *HandlerObj) DeleteUserHandler(rw http.ResponseWriter, r *http.Request) {
 	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()

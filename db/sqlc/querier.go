@@ -19,10 +19,7 @@ type Querier interface {
 	DeleteMovieFavorite(ctx context.Context, arg DeleteMovieFavoriteParams) (int64, error)
 	DeleteMovieRating(ctx context.Context, arg DeleteMovieRatingParams) (int64, error)
 	DeleteUser(ctx context.Context, id pgtype.UUID) (int64, error)
-	// COALESCE and LEFT JOIN because rating exist if only at least one person rate movie
-	// TODO: check will 2 subquery be faster than one
 	GetMovieByID(ctx context.Context, id pgtype.UUID) (GetMovieByIDRow, error)
-	// TODO: is it optimal (same as above query)
 	GetMovieByTitle(ctx context.Context, title string) (GetMovieByTitleRow, error)
 	GetMovieFavoriteList(ctx context.Context, userID pgtype.UUID) ([]pgtype.UUID, error)
 	GetMovieList(ctx context.Context) ([]Movie, error)

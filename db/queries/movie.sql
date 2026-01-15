@@ -1,6 +1,3 @@
--- COALESCE and LEFT JOIN because rating exist if only at least one person rate movie
--- TODO: check will 2 subquery be faster than one
-
 -- name: GetMovieByID :one
 SELECT id, title, COALESCE(amount_rates, 0), COALESCE(rating, 0), created_at
 FROM (
@@ -9,8 +6,6 @@ FROM (
 LEFT JOIN ( 
   select * from movie_rating_view where movie_id = $1
 ) mrv ON m.id = mrv.movie_id;
-
--- TODO: is it optimal (same as above query)
 
 -- name: GetMovieByTitle :one
 SELECT id, title, COALESCE(amount_rates, 0), COALESCE(rating, 0), created_at
@@ -30,7 +25,7 @@ RETURNING *;
 
 -- name: UpdateMovie :one
 UPDATE movie SET
-  title = COALESCE($2, title)
+  title = COALESCE(sqlc.narg(title), title)
 WHERE id = $1
 RETURNING *;
 

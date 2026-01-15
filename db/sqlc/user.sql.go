@@ -133,9 +133,9 @@ RETURNING id, name, login, password, is_admin, created_at
 
 type UpdateUserParams struct {
 	ID       pgtype.UUID `json:"id"`
-	Name     string      `json:"name"`
-	Login    string      `json:"login"`
-	Password string      `json:"-"`
+	Name     *string     `json:"name"`
+	Login    *string     `json:"login"`
+	Password *string     `json:"-"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (UserDatum, error) {

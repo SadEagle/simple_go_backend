@@ -83,7 +83,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/db.Movie"
+                            "$ref": "#/definitions/sqlc.Movie"
                         }
                     },
                     "404": {
@@ -107,7 +107,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/movie/{id}": {
+        "/movie/{movie_id}": {
             "get": {
                 "description": "Get movie by id",
                 "consumes": [
@@ -124,7 +124,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Movie ID",
-                        "name": "id",
+                        "name": "movie_id",
                         "in": "path",
                         "required": true
                     }
@@ -133,7 +133,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.GetMovieByIDRow"
+                            "$ref": "#/definitions/sqlc.GetMovieByIDRow"
                         }
                     },
                     "404": {
@@ -167,11 +167,12 @@ const docTemplate = `{
                 "tags": [
                     "movie"
                 ],
+                "summary": "Delete movie",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Movie ID",
-                        "name": "id",
+                        "name": "movie_id",
                         "in": "path",
                         "required": true
                     }
@@ -216,7 +217,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Movie ID",
-                        "name": "id",
+                        "name": "movie_id",
                         "in": "path",
                         "required": true
                     },
@@ -234,7 +235,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.Movie"
+                            "$ref": "#/definitions/sqlc.Movie"
                         }
                     },
                     "404": {
@@ -325,7 +326,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/db.UserDatum"
+                            "$ref": "#/definitions/sqlc.UserDatum"
                         }
                     },
                     "400": {
@@ -358,7 +359,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/{id}": {
+        "/user/{user_id}": {
             "get": {
                 "description": "Get user by id",
                 "consumes": [
@@ -375,7 +376,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "User ID",
-                        "name": "id",
+                        "name": "user_id",
                         "in": "path",
                         "required": true
                     }
@@ -384,7 +385,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.UserDatum"
+                            "$ref": "#/definitions/sqlc.UserDatum"
                         }
                     },
                     "404": {
@@ -418,11 +419,12 @@ const docTemplate = `{
                 "tags": [
                     "user"
                 ],
+                "summary": "Delete user",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "User ID",
-                        "name": "id",
+                        "name": "user_id",
                         "in": "path",
                         "required": true
                     }
@@ -467,7 +469,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "User ID",
-                        "name": "id",
+                        "name": "user_id",
                         "in": "path",
                         "required": true
                     },
@@ -485,7 +487,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.UserDatum"
+                            "$ref": "#/definitions/sqlc.UserDatum"
                         }
                     },
                     "400": {
@@ -520,7 +522,7 @@ const docTemplate = `{
         },
         "/user/{user_id}/favorite_movie": {
             "get": {
-                "description": "Get user favorite_movie list",
+                "description": "Get user's favorite movie list",
                 "consumes": [
                     "application/json"
                 ],
@@ -530,6 +532,7 @@ const docTemplate = `{
                 "tags": [
                     "favorite_movie"
                 ],
+                "summary": "Get favorite movie list",
                 "parameters": [
                     {
                         "type": "string",
@@ -569,7 +572,7 @@ const docTemplate = `{
         },
         "/user/{user_id}/favorite_movie/{movie_id}": {
             "post": {
-                "description": "Add movie to favorite",
+                "description": "Add movie to user's favorite",
                 "consumes": [
                     "application/json"
                 ],
@@ -579,6 +582,7 @@ const docTemplate = `{
                 "tags": [
                     "favorite_movie"
                 ],
+                "summary": "Add favorite movie",
                 "parameters": [
                     {
                         "type": "string",
@@ -599,7 +603,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.FavoriteMovie"
+                            "$ref": "#/definitions/sqlc.FavoriteMovie"
                         }
                     },
                     "404": {
@@ -633,6 +637,7 @@ const docTemplate = `{
                 "tags": [
                     "favorite_movie"
                 ],
+                "summary": "Delete favorite movie",
                 "parameters": [
                     {
                         "type": "string",
@@ -676,7 +681,7 @@ const docTemplate = `{
         },
         "/user/{user_id}/rated_movie": {
             "get": {
-                "description": "Get rated by user movie info",
+                "description": "Get movie rating by user id",
                 "consumes": [
                     "application/json"
                 ],
@@ -686,6 +691,7 @@ const docTemplate = `{
                 "tags": [
                     "rated_movie"
                 ],
+                "summary": "Get  movie rating",
                 "parameters": [
                     {
                         "type": "string",
@@ -733,6 +739,7 @@ const docTemplate = `{
                 "tags": [
                     "rated_movie"
                 ],
+                "summary": "Get  movie rating",
                 "parameters": [
                     {
                         "type": "string",
@@ -755,7 +762,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.RatedMovie"
+                            "$ref": "#/definitions/sqlc.RatedMovie"
                         }
                     },
                     "404": {
@@ -789,6 +796,7 @@ const docTemplate = `{
                 "tags": [
                     "rated_movie"
                 ],
+                "summary": "Update movie rating",
                 "parameters": [
                     {
                         "type": "string",
@@ -811,7 +819,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/db.RatedMovie"
+                            "$ref": "#/definitions/sqlc.RatedMovie"
                         }
                     },
                     "404": {
@@ -837,7 +845,7 @@ const docTemplate = `{
         },
         "/user/{user_id}/rated_movie/{movie_id}": {
             "delete": {
-                "description": "Delete movie rating",
+                "description": "Delete certain movie rating",
                 "consumes": [
                     "application/json"
                 ],
@@ -847,6 +855,7 @@ const docTemplate = `{
                 "tags": [
                     "rated_movie"
                 ],
+                "summary": "Delete movie rating",
                 "parameters": [
                     {
                         "type": "string",
@@ -890,96 +899,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "db.FavoriteMovie": {
-            "type": "object",
-            "properties": {
-                "movie_id": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "db.GetMovieByIDRow": {
-            "type": "object",
-            "properties": {
-                "amount_rates": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "rating": {
-                    "type": "number"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "db.GetMovieRatingListRow": {
-            "type": "object",
-            "properties": {
-                "movie_id": {
-                    "type": "string"
-                },
-                "rating": {
-                    "$ref": "#/definitions/pgtype.Int4"
-                }
-            }
-        },
-        "db.Movie": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "db.RatedMovie": {
-            "type": "object",
-            "properties": {
-                "movie_id": {
-                    "type": "string"
-                },
-                "rating": {
-                    "$ref": "#/definitions/pgtype.Int4"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "db.UserDatum": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "$ref": "#/definitions/pgtype.Timestamp"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_admin": {
-                    "type": "boolean"
-                },
-                "login": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
         "pgtype.InfinityModifier": {
             "type": "integer",
             "format": "int32",
@@ -993,18 +912,6 @@ const docTemplate = `{
                 "Finite",
                 "NegativeInfinity"
             ]
-        },
-        "pgtype.Int4": {
-            "type": "object",
-            "properties": {
-                "int32": {
-                    "type": "integer",
-                    "format": "int32"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
         },
         "pgtype.Timestamp": {
             "type": "object",
@@ -1041,7 +948,7 @@ const docTemplate = `{
                 "movie_list": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/db.Movie"
+                        "$ref": "#/definitions/sqlc.Movie"
                     }
                 }
             }
@@ -1060,7 +967,7 @@ const docTemplate = `{
                 "rated_movie_list": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/db.GetMovieRatingListRow"
+                        "$ref": "#/definitions/sqlc.GetMovieRatingListRow"
                     }
                 },
                 "user_id": {
@@ -1075,7 +982,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "rating": {
-                    "$ref": "#/definitions/pgtype.Int4"
+                    "type": "integer"
                 }
             }
         },
@@ -1085,7 +992,7 @@ const docTemplate = `{
                 "user_list": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/db.UserDatum"
+                        "$ref": "#/definitions/sqlc.UserDatum"
                     }
                 }
             }
@@ -1100,6 +1007,93 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "sqlc.FavoriteMovie": {
+            "type": "object",
+            "properties": {
+                "movie_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "sqlc.GetMovieByIDRow": {
+            "type": "object",
+            "properties": {
+                "amount_rates": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "sqlc.GetMovieRatingListRow": {
+            "type": "object",
+            "properties": {
+                "movie_id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                }
+            }
+        },
+        "sqlc.Movie": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "sqlc.RatedMovie": {
+            "type": "object",
+            "properties": {
+                "movie_id": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "sqlc.UserDatum": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamp"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "login": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -1121,6 +1115,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Basic swagger for current api",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

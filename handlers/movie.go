@@ -19,11 +19,11 @@ import (
 // @Tags         movie
 // @Accept       json
 // @Produce      json
-// @Param        id   path      string  true  "Movie ID"
-// @Success      200  {object}  db.GetMovieByIDRow
+// @Param        movie_id   path      string  true  "Movie ID"
+// @Success      200  {object}  sqlc.GetMovieByIDRow
 // @Failure      404  {object}	map[string]string
 // @Failure      500  {object}  map[string]string
-// @Router       /movie/{id} [get]
+// @Router       /movie/{movie_id} [get]
 func (ho *HandlerObj) GetMovieHandler(rw http.ResponseWriter, r *http.Request) {
 	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
@@ -74,12 +74,12 @@ func (ho *HandlerObj) GetMovieListHandler(rw http.ResponseWriter, r *http.Reques
 // @Tags         movie
 // @Accept       json
 // @Produce      json
-// @Param        id   path      string  true  "Movie ID"
+// @Param        movie_id   path      string  true  "Movie ID"
 // @Param        request 		body	reqmodel.MovieRequest  true  "Movie creation data"
-// @Success      200  {object}  db.Movie
+// @Success      200  {object}  sqlc.Movie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Router       /movie/{id} [patch]
+// @Router       /movie/{movie_id} [patch]
 func (ho *HandlerObj) UpdateMovieHandler(rw http.ResponseWriter, r *http.Request) {
 	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()
@@ -87,7 +87,7 @@ func (ho *HandlerObj) UpdateMovieHandler(rw http.ResponseWriter, r *http.Request
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
-	var updateMovie reqmodel.MovieRequest
+	var updateMovie reqmodel.MovieUpdateRequest
 	err := decoder.Decode(&updateMovie)
 	if err != nil && err != io.EOF {
 		ho.Log.Println(fmt.Errorf("proceed body request: %w", err))
@@ -118,7 +118,7 @@ func (ho *HandlerObj) UpdateMovieHandler(rw http.ResponseWriter, r *http.Request
 // @Accept       json
 // @Produce      json
 // @Param        request 		body	reqmodel.MovieRequest  true  "Movie creation data"
-// @Success      201  {object}  db.Movie
+// @Success      201  {object}  sqlc.Movie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /movie [post]
@@ -152,11 +152,11 @@ func (ho *HandlerObj) CreateMovieHandler(rw http.ResponseWriter, r *http.Request
 // @Tags         movie
 // @Accept       json
 // @Produce      json
-// @Param        id   path      string  true  "Movie ID"
+// @Param        movie_id   path      string  true  "Movie ID"
 // @Success      204
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
-// @Router       /movie/{id} [delete]
+// @Router       /movie/{movie_id} [delete]
 func (ho *HandlerObj) DeleteMovieHandler(rw http.ResponseWriter, r *http.Request) {
 	ctx, close := context.WithTimeout(r.Context(), OpTimeContext)
 	defer close()

@@ -20,7 +20,7 @@ RETURNING user_id, movie_id, rating
 type CreateMovieRatingParams struct {
 	UserID  pgtype.UUID `json:"user_id"`
 	MovieID pgtype.UUID `json:"movie_id"`
-	Rating  pgtype.Int4 `json:"rating"`
+	Rating  int16       `json:"rating"`
 }
 
 func (q *Queries) CreateMovieRating(ctx context.Context, arg CreateMovieRatingParams) (RatedMovie, error) {
@@ -56,7 +56,7 @@ WHERE user_id = $1
 
 type GetMovieRatingListRow struct {
 	MovieID pgtype.UUID `json:"movie_id"`
-	Rating  pgtype.Int4 `json:"rating"`
+	Rating  int16       `json:"rating"`
 }
 
 func (q *Queries) GetMovieRatingList(ctx context.Context, userID pgtype.UUID) ([]GetMovieRatingListRow, error) {
@@ -90,7 +90,7 @@ RETURNING user_id, movie_id, rating
 type UpdateMoveRatingParams struct {
 	UserID  pgtype.UUID `json:"user_id"`
 	MovieID pgtype.UUID `json:"movie_id"`
-	Rating  pgtype.Int4 `json:"rating"`
+	Rating  *int16      `json:"rating"`
 }
 
 func (q *Queries) UpdateMoveRating(ctx context.Context, arg UpdateMoveRatingParams) (RatedMovie, error) {

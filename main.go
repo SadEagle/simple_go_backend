@@ -64,27 +64,27 @@ func main() {
 	handlerObj := handlers.HandlerObj{DBPool: queries, Log: *log.Default()}
 
 	// user
-	mux.HandleFunc("GET /user/{id}", handlerObj.GetUserHandler)
+	mux.HandleFunc("GET /user/{user_id}", handlerObj.GetUserHandler)
 	mux.HandleFunc("GET /user", handlerObj.GetUserListHandler)
 	mux.HandleFunc("POST /user", handlerObj.CreateUserHandler)
-	mux.HandleFunc("PATCH /user/{id}", handlerObj.UpdateUserHandler)
-	mux.HandleFunc("DELETE /user/{id}", handlerObj.DeleteUserHandler)
+	mux.HandleFunc("PATCH /user/{user_id}", handlerObj.UpdateUserHandler)
+	mux.HandleFunc("DELETE /user/{user_id}", handlerObj.DeleteUserHandler)
 	// movie
-	mux.HandleFunc("GET /movie/{id}", handlerObj.GetMovieHandler)
+	mux.HandleFunc("GET /movie/{movie_id}", handlerObj.GetMovieHandler)
 	mux.HandleFunc("GET /movie", handlerObj.GetMovieListHandler)
 	mux.HandleFunc("POST /movie", handlerObj.CreateMovieHandler)
-	mux.HandleFunc("PATCH /movie/{id}", handlerObj.UpdateMovieHandler)
-	mux.HandleFunc("DELETE /movie/{id}", handlerObj.DeleteMovieHandler)
+	mux.HandleFunc("PATCH /movie/{movie_id}", handlerObj.UpdateMovieHandler)
+	mux.HandleFunc("DELETE /movie/{movie_id}", handlerObj.DeleteMovieHandler)
 	// favorite_movie
 	mux.HandleFunc("GET /user/{user_id}/favorite_movie", handlerObj.GetFavoriteMovieListHandler)
 	mux.HandleFunc("POST /user/{user_id}/favorite_movie", handlerObj.CreateMovieFavoriteHandler)
-	mux.HandleFunc("PATCH /user/{id}/favorite_movie", handlerObj.UpdateMovieHandler)
+	mux.HandleFunc("PATCH /user/{user_id}/favorite_movie", handlerObj.UpdateMovieHandler)
 	mux.HandleFunc("DELETE /user/{user_id}/favorite_movie/{movie_id}", handlerObj.DeleteFavoriteMovieHandler)
 	// rated_movie
-	mux.HandleFunc("GET /user/{user_id}/rated_movie", handlerObj.GetFavoriteMovieListHandler)
-	mux.HandleFunc("POST /user/{user_id}/rated_movie", handlerObj.CreateMovieFavoriteHandler)
-	mux.HandleFunc("PATCH /user/{user_id}/rated_movie", handlerObj.UpdateMovieHandler)
-	mux.HandleFunc("DELETE /user/{user_id}/rated_movie/{movie_id}", handlerObj.DeleteFavoriteMovieHandler)
+	mux.HandleFunc("GET /user/{user_id}/rated_movie", handlerObj.GetRatedMovieListHandler)
+	mux.HandleFunc("POST /user/{user_id}/rated_movie", handlerObj.CreateRatedMovieHandler)
+	mux.HandleFunc("PATCH /user/{user_id}/rated_movie", handlerObj.UpdateRatedMovieHandler)
+	mux.HandleFunc("DELETE /user/{user_id}/rated_movie/{movie_id}", handlerObj.DeleteRatedMovieHandler)
 	// Swagger
 	mux.HandleFunc("GET /swagger/", httpSwagger.WrapHandler)
 

@@ -51,7 +51,7 @@ func (ho *HandlerObj) GetFavoriteMovieListHandler(rw http.ResponseWriter, r *htt
 // @Produce      json
 // @Param        user_id   	path      string  true  "User ID"
 // @Param        movie_id   path      string  true  "Movie ID"
-// @Success      200  {object}  db.FavoriteMovie
+// @Success      200  {object}  sqlc.FavoriteMovie
 // @Failure      404  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /user/{user_id}/favorite_movie/{movie_id} [post]

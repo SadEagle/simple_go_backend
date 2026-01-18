@@ -26,7 +26,16 @@ CREATE TABLE IF NOT EXISTS rated_movie(
   PRIMARY KEY( user_id, movie_id)
 );
 
-CREATE MATERIALIZED VIEW movie_rating_view AS
+CREATE TABLE IF NOT EXISTS movie_comment(
+  id INT GENERATED AS ALWAYS 
+  user_id UUID REFERENCES user_data ON DELETE CASCADE,
+  movie_id UUID REFERENCES movie ON DELETE CASCADE,
+  text VARCHAR NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  PRIMARY KEY( user_id, movie_id )
+)
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS movie_rating_view AS
 SELECT movie_id, COUNT(*) AS amount_rates, AVG(rating) AS rating
 FROM rated_movie
 GROUP BY movie_id;

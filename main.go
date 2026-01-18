@@ -59,7 +59,7 @@ func main() {
 	go ping_db_check()
 
 	mux := http.NewServeMux()
-	handlerObj := handlers.HandlerObj{DBPool: queries, Log: *log.Default()}
+	handlerObj := handlers.HandlerObj{DBPool: queries, Log: log.Default()}
 
 	// user
 	mux.HandleFunc("GET /user/{user_id}", handlerObj.GetUserHandler)
@@ -84,7 +84,7 @@ func main() {
 	mux.HandleFunc("PATCH /user/{user_id}/rated_movie", handlerObj.UpdateRatedMovieHandler)
 	mux.HandleFunc("DELETE /user/{user_id}/rated_movie/{movie_id}", handlerObj.DeleteRatedMovieHandler)
 	// System specific commands
-	mux.Handle("GET /healthcheck", handlers.CreateCheckHealthHandlerCreate(dbPool))
+	mux.Handle("GET /healthcheck", handlers.CheckHealthHandlerCreate(dbPool))
 	// Swagger
 	mux.HandleFunc("GET /swagger/", httpSwagger.WrapHandler)
 

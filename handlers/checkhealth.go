@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func CreateCheckHealthHandlerCreate(pool *pgxpool.Pool) http.HandlerFunc {
+func CheckHealthHandlerCreate(pool *pgxpool.Pool) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(r.Context(), CheckHealthTimeContext)
 		defer cancel()
